@@ -1,4 +1,4 @@
-('C:\\Users\\coope\\Desktop\\Python\\build\\main\\PYZ-00.pyz',
+('C:\\Users\\coope\\Desktop\\Python\\Elan-2K-Mod\\build\\main\\PYZ-00.pyz',
  [('PyQt5',
    'C:\\Users\\coope\\AppData\\Local\\Programs\\Python\\Python310\\lib\\site-packages\\PyQt5\\__init__.py',
    'PYMODULE'),
