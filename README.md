@@ -10,5 +10,5 @@ How to build for yourself:
 2. Run "pyinstaller --onefile main.py"
 3. In main.spec, set datas=[('resources', 'resources')]
 4. Set "Name" to whatever you please
-5. Add "icon=ja.ico" as ytour final line in the exe group of arguments, or whatever icon you please
+5. Add "icon=ja.ico" as your final line in the exe group of arguments, or whatever icon you please
 6. Run "pyinstaller main.spec"
