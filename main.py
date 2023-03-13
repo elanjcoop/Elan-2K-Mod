@@ -41,12 +41,19 @@ PERIOD_TIME_LEFT = 0x19EE638
 BACKCOURT_TIME_LEFT_ADDRESS = 0x19EE670
 HOME_SCORE_ADDRESS = 0x19E2188
 AWAY_SCORE_ADDRESS = 0x19E260C
+SHOT_LENGTH_ADDRESS = 0x1A16290
+THREE_POINTER_VALUE_ADDRESS = 0x19EE944
+INTERNAL_GAME_YEAR_ADDRESS = 0xF32918
+HOME_GAME_FOULS_ADDRESS = 0x19E2540
+AWAY_GAME_FOULS_ADDRESS = 0x19E29C4
+FREE_THROWS_REMAINING_ADDRESS = 0x19EE8DC
+FREE_THROWS_VALUE_ADDRESS = 0x19EE94C
 
 OFFICIAL_RULES_SHOT_CLOCK = 24.0000
 OFFICIAL_BACKCOURT_TIME = 8
 
-target_shot_clock_full = 30.0
-target_shot_clock_reset = 20.0
+target_shot_clock_full = 24.000001
+target_shot_clock_reset = 14.000001
 target_target_score = 5
 target_overtime_deadline = 3600.0
 
@@ -55,6 +62,8 @@ prev_home_off_reb_count, prev_away_off_reb_count = 0, 0
 has_overtime = False
 
 overtime_start_home_score, overtime_start_away_score = 0, 0
+home_team_fouls, away_team_fouls = 0,0
+time_remaining = 0.0
 
 mem, module = 0, 0
 
@@ -64,6 +73,7 @@ game_opened = False
 target_score_enabled = False
 ten_second_violation_enabled = False
 halves_enabled = False
+g_league_free_throw_rule_enabled = False
 
 def set_shot_clock_full(input_shot_clock_full):
     try:
@@ -127,6 +137,26 @@ def sync_rebounds(mem, module):
     prev_home_off_reb_count = mem.read_short(module + HOME_OFF_REB_ADDRESS)
     prev_away_off_reb_count = mem.read_short(module + AWAY_OFF_REB_ADDRESS)
 
+def check_four_pointer(mem, module):
+    if mem.read_float(module + SHOT_LENGTH_ADDRESS) > 762.0:
+        mem.write_short(module + THREE_POINTER_VALUE_ADDRESS, 4)
+    else:
+        mem.write_short(module + THREE_POINTER_VALUE_ADDRESS, 3)
+
+def g_league_free_throw_rule(mem, module):
+    global away_team_fouls, home_team_fouls, time_remaining
+    #print("HI")
+    if mem.read_short(module + FREE_THROWS_REMAINING_ADDRESS) > 1:
+        time_remaining = mem.read_float(module + PERIOD_TIME_LEFT)
+        fts_remaining = mem.read_short(module + FREE_THROWS_REMAINING_ADDRESS)
+        print(fts_remaining)
+        mem.write_short(module + FREE_THROWS_VALUE_ADDRESS, fts_remaining)
+        mem.write_short(module + FREE_THROWS_REMAINING_ADDRESS, 1)
+    if time_remaining != mem.read_float(module + PERIOD_TIME_LEFT):
+        mem.write_short(module + FREE_THROWS_VALUE_ADDRESS, 1)
+        time_remaining = mem.read_float(module + PERIOD_TIME_LEFT)
+
+
 #If first free throw goes in, there is a bug.
 def check_target_score_reached(mem, module):
     global has_overtime, overtime_start_home_score, overtime_start_away_score
@@ -183,7 +213,7 @@ def start_mod():
                 print("Away team offensive rebound! Soft reset shot clock with ", round(mem.read_float(module + PERIOD_TIME_LEFT), 2), " remaining in Q", mem.read_short(module + PERIOD_ADDRESS), sep = '')
             elif mem.read_float(module + SHOT_CLOCK_ADDRESS) == OFFICIAL_RULES_SHOT_CLOCK:
                 mem.write_float(module + SHOT_CLOCK_ADDRESS, target_shot_clock_full)
-                print("Shot clock reset with ", round(mem.read_float(module + PERIOD_TIME_LEFT), 2), " remaining in Q", mem.read_short(module + PERIOD_ADDRESS), sep = '')
+                #print("Shot clock reset with ", round(mem.read_float(module + PERIOD_TIME_LEFT), 2), " remaining in Q", mem.read_short(module + PERIOD_ADDRESS), sep = '')
             if ten_second_violation_enabled:
                 if mem.read_float(module + BACKCOURT_TIME_LEFT_ADDRESS) == OFFICIAL_BACKCOURT_TIME:
                     mem.write_float(module + BACKCOURT_TIME_LEFT_ADDRESS, 10.0)
@@ -199,6 +229,9 @@ def start_mod():
                     check_target_score_reached(mem, module)
             else:
                 has_overtime = False
+            #check_four_pointer()
+            if g_league_free_throw_rule_enabled:
+                g_league_free_throw_rule(mem, module)
         except:
             exit
 
@@ -206,7 +239,7 @@ def window():
     app = QApplication(sys.argv)
     win = QMainWindow()
 
-    win.setGeometry(1200, 300, 350, 400)
+    win.setGeometry(1200, 300, 350, 500)
     win.setWindowTitle("Elan's Mod")
     win.setWindowIcon(QIcon("ja.jpg"))
     def resource_path(relative_path):
@@ -252,6 +285,14 @@ def window():
     lbl_enable_halves = QtWidgets.QLabel(win)
     lbl_enable_halves.setText("Two Halves")
     lbl_enable_halves.move(50, 290)
+
+    lbl_gleague_ft_rule = QtWidgets.QLabel(win)
+    lbl_gleague_ft_rule.setText("G-League FT Rule")
+    lbl_gleague_ft_rule.move(50, 330)
+
+    lbl_internal_game_year = QtWidgets.QLabel(win)
+    lbl_internal_game_year.setText("Internal Game Year")
+    lbl_internal_game_year.move(50, 370)
 
     txt_shot_clock = QtWidgets.QLineEdit(win)
     txt_shot_clock.move(200, 50)
@@ -299,13 +340,22 @@ def window():
     checkbox_enable_halves.setChecked(False)
     checkbox_enable_halves.move(200, 290)
 
+    checkbox_gleague_ft_rule = QtWidgets.QCheckBox(win)
+    checkbox_gleague_ft_rule.setChecked(False)
+    checkbox_gleague_ft_rule.move(200, 330)
+
+    txt_internal_game_date_year = QtWidgets.QLineEdit(win)
+    txt_internal_game_date_year.move(200, 370)
+    txt_internal_game_date_year.setPlaceholderText("2013")
+    txt_internal_game_date_year.setText("2013")
+
     def apply_clicked(self):
         print("New values applied.")
         set_shot_clock_full(txt_shot_clock.text())
         set_shot_clock_reset(txt_reset_shot_clock.text())
         set_target_score(txt_target_score.text())
         set_overtime_deadline(txt_overtime_deadline.text())
-        global ten_second_violation_enabled, halves_enabled
+        global ten_second_violation_enabled, halves_enabled, g_league_free_throw_rule_enabled
         if checkbox_enable_ten_second.isChecked():
             print("Ten second backcourt enabled.")
             ten_second_violation_enabled = True
@@ -320,18 +370,27 @@ def window():
             print("Halves disabled.")
             halves_enabled = False
             pass
+        if checkbox_gleague_ft_rule.isChecked():
+            print("G-League FTs: Enabled")
+            g_league_free_throw_rule_enabled = True
+        else:
+            print("G-League FTs: Disabled")
+            g_league_free_throw_rule_enabled = False
         try:
             mem = Pymem("nba2k14.exe")
+            module = module_from_name(mem.process_handle, "nba2k14.exe").lpBaseOfDll
             lbl_please_open_game.setText("")
+            if int(txt_internal_game_date_year.text()) >= 0:
+                mem.write_short(module + INTERNAL_GAME_YEAR_ADDRESS, int(txt_internal_game_date_year.text()))
         except:
-            lbl_please_open_game.setText("Please open NBA 2K14.")
+            lbl_please_open_game.setText("Please open NBA 2K14 / illegal game year.")
             lbl_please_open_game.setStyleSheet('QLabel{color: red}')
             lbl_please_open_game.adjustSize()
 
     btn_apply = QtWidgets.QPushButton(win)
     btn_apply.setText("Apply")
     btn_apply.clicked.connect(apply_clicked)
-    btn_apply.move(200, 330)
+    btn_apply.move(200, 410)
     thread1 = QThread1()
     thread1.start()
 
