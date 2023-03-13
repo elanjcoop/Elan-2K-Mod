@@ -6,7 +6,7 @@ How to start:
 Simply open dist/Elan's Mod.exe
 
 How to build for yourself:
-Pre-1. Delete build/ and dist/ folders (recursively) and main.spec
+1a. Delete build/ and dist/ folders (recursively) and main.spec
 1. Go to directory containing main.py
 2. Run "pyinstaller --onefile main.py"
 3. In main.spec, set datas=[('resources', 'resources')]
