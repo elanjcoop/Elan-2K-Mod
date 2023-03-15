@@ -74,6 +74,7 @@ target_score_enabled = False
 ten_second_violation_enabled = False
 halves_enabled = False
 g_league_free_throw_rule_enabled = False
+threes_disabled = False
 
 def set_shot_clock_full(input_shot_clock_full):
     try:
@@ -156,6 +157,10 @@ def g_league_free_throw_rule(mem, module):
         mem.write_short(module + FREE_THROWS_VALUE_ADDRESS, 1)
         time_remaining = mem.read_float(module + PERIOD_TIME_LEFT)
 
+def threes_off(mem, module):
+    if mem.read_short(module + THREE_POINTER_VALUE_ADDRESS) == 3:
+        mem.write_short(module + THREE_POINTER_VALUE_ADDRESS, 2)
+
 
 #If first free throw goes in, there is a bug.
 def check_target_score_reached(mem, module):
@@ -232,6 +237,11 @@ def start_mod():
             #check_four_pointer()
             if g_league_free_throw_rule_enabled:
                 g_league_free_throw_rule(mem, module)
+            if threes_disabled:
+                threes_off(mem, module)
+            else:
+                if mem.read_short(module + THREE_POINTER_VALUE_ADDRESS) == 2:
+                    mem.write_short(module + THREE_POINTER_VALUE_ADDRESS, 3)
         except:
             exit
 
@@ -294,6 +304,10 @@ def window():
     lbl_internal_game_year.setText("Internal Game Year")
     lbl_internal_game_year.move(50, 370)
 
+    lbl_disable_threes = QtWidgets.QLabel(win)
+    lbl_disable_threes.setText("Disable Three Pointers?")
+    lbl_disable_threes.move(50, 410)
+
     txt_shot_clock = QtWidgets.QLineEdit(win)
     txt_shot_clock.move(200, 50)
     txt_shot_clock.setPlaceholderText("24")
@@ -349,13 +363,17 @@ def window():
     txt_internal_game_date_year.setPlaceholderText("2013")
     txt_internal_game_date_year.setText("2013")
 
+    checkbox_disable_threes = QtWidgets.QCheckBox(win)
+    checkbox_disable_threes.setChecked(False)
+    checkbox_disable_threes.move(200, 410)
+
     def apply_clicked(self):
         print("New values applied.")
         set_shot_clock_full(txt_shot_clock.text())
         set_shot_clock_reset(txt_reset_shot_clock.text())
         set_target_score(txt_target_score.text())
         set_overtime_deadline(txt_overtime_deadline.text())
-        global ten_second_violation_enabled, halves_enabled, g_league_free_throw_rule_enabled
+        global ten_second_violation_enabled, halves_enabled, g_league_free_throw_rule_enabled, threes_disabled
         if checkbox_enable_ten_second.isChecked():
             print("Ten second backcourt enabled.")
             ten_second_violation_enabled = True
@@ -376,6 +394,12 @@ def window():
         else:
             print("G-League FTs: Disabled")
             g_league_free_throw_rule_enabled = False
+        if checkbox_disable_threes.isChecked():
+            print("3s: Disabled")
+            threes_disabled = True
+        else:
+            print("3s: Enabled")
+            threes_disabled = False
         try:
             mem = Pymem("nba2k14.exe")
             module = module_from_name(mem.process_handle, "nba2k14.exe").lpBaseOfDll
@@ -390,7 +414,7 @@ def window():
     btn_apply = QtWidgets.QPushButton(win)
     btn_apply.setText("Apply")
     btn_apply.clicked.connect(apply_clicked)
-    btn_apply.move(200, 410)
+    btn_apply.move(200, 450)
     thread1 = QThread1()
     thread1.start()
 
