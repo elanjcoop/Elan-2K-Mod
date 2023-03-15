@@ -2,6 +2,12 @@
 <CheatTable CheatEngineTableVersion="45">
   <CheatEntries>
     <CheatEntry>
+      <ID>4</ID>
+      <Description>"No description"</Description>
+      <VariableType>Byte</VariableType>
+      <Address>nba2k14.exe+11DD541</Address>
+    </CheatEntry>
+    <CheatEntry>
       <ID>11</ID>
       <Description>"Time"</Description>
       <Options moHideChildren="1"/>
@@ -44,34 +50,34 @@
       <GroupHeader>1</GroupHeader>
       <CheatEntries>
         <CheatEntry>
-          <ID>5</ID>
+          <ID>14</ID>
           <Description>"Total Home"</Description>
           <ShowAsSigned>0</ShowAsSigned>
           <VariableType>2 Bytes</VariableType>
           <Address>nba2k14.exe+19E2188</Address>
         </CheatEntry>
         <CheatEntry>
-          <ID>6</ID>
+          <ID>15</ID>
           <Description>"Total Home (2)"</Description>
           <ShowAsSigned>0</ShowAsSigned>
           <VariableType>2 Bytes</VariableType>
           <Address>nba2k14.exe+1C18D2C</Address>
         </CheatEntry>
         <CheatEntry>
-          <ID>4</ID>
+          <ID>16</ID>
           <Description>"3Q Home"</Description>
           <ShowAsSigned>0</ShowAsSigned>
           <VariableType>2 Bytes</VariableType>
           <Address>nba2k14.exe+19E229C</Address>
         </CheatEntry>
         <CheatEntry>
-          <ID>14</ID>
+          <ID>17</ID>
           <Description>"4Q Home"</Description>
           <VariableType>2 Bytes</VariableType>
           <Address>nba2k14.exe+19E22F8</Address>
         </CheatEntry>
         <CheatEntry>
-          <ID>7</ID>
+          <ID>18</ID>
           <Description>"Starting SF - Home"</Description>
           <ShowAsSigned>0</ShowAsSigned>
           <VariableType>2 Bytes</VariableType>
@@ -85,7 +91,7 @@
           <Address>nba2k14.exe+19E2194</Address>
         </CheatEntry>
         <CheatEntry>
-          <ID>15</ID>
+          <ID>19</ID>
           <Description>"Bench Points"</Description>
           <VariableType>2 Bytes</VariableType>
           <Address>nba2k14.exe+1BD7BA8</Address>
@@ -93,30 +99,48 @@
       </CheatEntries>
     </CheatEntry>
     <CheatEntry>
-      <ID>16</ID>
+      <ID>20</ID>
       <Description>"Misc"</Description>
       <Options moHideChildren="1"/>
       <GroupHeader>1</GroupHeader>
       <CheatEntries>
         <CheatEntry>
-          <ID>17</ID>
+          <ID>21</ID>
           <Description>"Year (Originally: 2013)"</Description>
           <ShowAsSigned>0</ShowAsSigned>
           <VariableType>2 Bytes</VariableType>
           <Address>nba2k14.exe+F32918</Address>
         </CheatEntry>
         <CheatEntry>
-          <ID>18</ID>
+          <ID>22</ID>
           <Description>"Salary Cap"</Description>
           <ShowAsSigned>0</ShowAsSigned>
           <VariableType>4 Bytes</VariableType>
           <Address>nba2k14.exe+1BAE590</Address>
         </CheatEntry>
         <CheatEntry>
-          <ID>19</ID>
+          <ID>23</ID>
           <Description>"Hard Cap"</Description>
           <VariableType>4 Bytes</VariableType>
           <Address>nba2k14.exe+1BAE5A4</Address>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>43</ID>
+          <Description>"Active Players"</Description>
+          <VariableType>Byte</VariableType>
+          <Address>nba2k14.exe+1A20020</Address>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>42</ID>
+          <Description>"P1 Team"</Description>
+          <VariableType>Byte</VariableType>
+          <Address>nba2k14.exe+1127920</Address>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>44</ID>
+          <Description>"P5 Team"</Description>
+          <VariableType>Byte</VariableType>
+          <Address>nba2k14.exe+1127960</Address>
         </CheatEntry>
       </CheatEntries>
     </CheatEntry>
@@ -189,6 +213,58 @@
           <ShowAsSigned>0</ShowAsSigned>
           <VariableType>Byte</VariableType>
           <Address>nba2k14.exe+19E29C4</Address>
+        </CheatEntry>
+      </CheatEntries>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>40</ID>
+      <Description>"Defense"</Description>
+      <Options moHideChildren="1"/>
+      <GroupHeader>1</GroupHeader>
+      <CheatEntries>
+        <CheatEntry>
+          <ID>41</ID>
+          <Description>"Home Defensive Set"</Description>
+          <VariableType>Byte</VariableType>
+          <Address>nba2k14.exe+18E7544</Address>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>39</ID>
+          <Description>"Away Defensive Set"</Description>
+          <VariableType>Byte</VariableType>
+          <Address>nba2k14.exe+18E7674</Address>
+        </CheatEntry>
+      </CheatEntries>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>45</ID>
+      <Description>"Weird Number Research"</Description>
+      <Options moHideChildren="1"/>
+      <GroupHeader>1</GroupHeader>
+      <CheatEntries>
+        <CheatEntry>
+          <ID>5</ID>
+          <Description>"No description"</Description>
+          <VariableType>4 Bytes</VariableType>
+          <Address>nba2k14.exe+11DD540</Address>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>6</ID>
+          <Description>"No description"</Description>
+          <VariableType>Float</VariableType>
+          <Address>nba2k14.exe+11DD540</Address>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>7</ID>
+          <Description>"No description"</Description>
+          <VariableType>Double</VariableType>
+          <Address>nba2k14.exe+11DD53C</Address>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>9</ID>
+          <Description>"No description"</Description>
+          <VariableType>Double</VariableType>
+          <Address>nba2k14.exe+11DD540</Address>
         </CheatEntry>
       </CheatEntries>
     </CheatEntry>
