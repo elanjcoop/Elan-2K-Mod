@@ -11,10 +11,10 @@
 * Change the Internal Game Year
 
 
-### START IT UP
+## START IT UP
 Simply open dist/Elan's Mod.exe
 
-### MAKE IT YOUR OWN
+## MAKE IT YOUR OWN
 How to build for yourself:
 1. Delete build/ and dist/ folders (recursively) and main.spec
 2. Go to directory containing main.py
@@ -26,6 +26,6 @@ How to build for yourself:
 8. Run "pyinstaller main.spec"
 9. If you renamed in Step 6, delete "main.exe" and run RENAMED_FILE.exe
 
-### MORE
+## MORE
 Read more about the mod here:
 https://forums.nba-live.com/viewtopic.php?f=153&t=114893
