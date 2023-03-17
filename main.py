@@ -43,6 +43,7 @@ HOME_SCORE_ADDRESS = 0x19E2188
 AWAY_SCORE_ADDRESS = 0x19E260C
 SHOT_LENGTH_ADDRESS = 0x1A16290
 THREE_POINTER_VALUE_ADDRESS = 0x19EE944
+TWO_POINTER_VALUE_ADDRESS = 0x19EE948
 INTERNAL_GAME_YEAR_ADDRESS = 0xF32918
 HOME_GAME_FOULS_ADDRESS = 0x19E2540
 AWAY_GAME_FOULS_ADDRESS = 0x19E29C4
@@ -56,6 +57,7 @@ target_shot_clock_full = 24.000001
 target_shot_clock_reset = 14.000001
 target_target_score = 5
 target_overtime_deadline = 3600.0
+shortened_three_point_length = 601.98
 
 prev_home_off_reb_count, prev_away_off_reb_count = 0, 0
 
@@ -75,6 +77,7 @@ ten_second_violation_enabled = False
 halves_enabled = False
 g_league_free_throw_rule_enabled = False
 threes_disabled = False
+shorten_threes_enabled = False
 
 def set_shot_clock_full(input_shot_clock_full):
     try:
@@ -120,6 +123,19 @@ def set_overtime_deadline(input_overtime_deadline):
     else:
         target_overtime_deadline = 3600.0
 
+def set_shortened_three_length(input_shortened_three_length):
+    try:
+        input_shortened_three_length = float(input_shortened_three_length)
+    except:
+        input_shortened_three_length = 23.75
+    global shortened_three_point_length
+    if input_shortened_three_length > 0.0 and input_shortened_three_length < 99.0:
+        shortened_three_point_length = input_shortened_three_length * 30.48
+        print("Shortened three length: ", shortened_three_point_length, sep = '')
+    else:
+        shortened_three_point_length = 723.9
+        print("Shortened three length: ", shortened_three_point_length, sep = '')
+
 def check_overtime_started(mem, module):
     if mem.read_short(module + PERIOD_ADDRESS) == 5:
         global has_overtime, overtime_start_home_score, overtime_start_away_score
@@ -160,6 +176,12 @@ def g_league_free_throw_rule(mem, module):
 def threes_off(mem, module):
     if mem.read_short(module + THREE_POINTER_VALUE_ADDRESS) == 3:
         mem.write_short(module + THREE_POINTER_VALUE_ADDRESS, 2)
+
+def shorten_threes(mem, module):
+    if mem.read_float(module + SHOT_LENGTH_ADDRESS) > shortened_three_point_length:
+        mem.write_short(module + TWO_POINTER_VALUE_ADDRESS, 3)
+    else:
+        mem.write_short(module + TWO_POINTER_VALUE_ADDRESS, 2)
 
 
 #If first free throw goes in, there is a bug.
@@ -219,6 +241,12 @@ def start_mod():
             elif mem.read_float(module + SHOT_CLOCK_ADDRESS) == OFFICIAL_RULES_SHOT_CLOCK:
                 mem.write_float(module + SHOT_CLOCK_ADDRESS, target_shot_clock_full)
                 #print("Shot clock reset with ", round(mem.read_float(module + PERIOD_TIME_LEFT), 2), " remaining in Q", mem.read_short(module + PERIOD_ADDRESS), sep = '')
+            if shorten_threes_enabled:
+                shorten_threes(mem, module)
+            else:
+                if mem.read_short(module + TWO_POINTER_VALUE_ADDRESS) != 2:
+                    mem.write_short(module + TWO_POINTER_VALUE_ADDRESS, 2)
+                    print("Reverted 3-Pt Shortening.")
             if ten_second_violation_enabled:
                 if mem.read_float(module + BACKCOURT_TIME_LEFT_ADDRESS) == OFFICIAL_BACKCOURT_TIME:
                     mem.write_float(module + BACKCOURT_TIME_LEFT_ADDRESS, 10.0)
@@ -249,7 +277,7 @@ def window():
     app = QApplication(sys.argv)
     win = QMainWindow()
 
-    win.setGeometry(1200, 300, 350, 500)
+    win.setGeometry(1200, 300, 350, 630)
     win.setWindowTitle("Elan's Mod")
     win.setWindowIcon(QIcon("ja.jpg"))
     def resource_path(relative_path):
@@ -264,49 +292,57 @@ def window():
 
     lbl_please_open_game = QtWidgets.QLabel(win)
     lbl_please_open_game.setText("")
-    lbl_please_open_game.move(50, 25)
+    lbl_please_open_game.move(40, 25)
     lbl_please_open_game.setLineWidth(100)
 
     lbl_shot_clock = QtWidgets.QLabel(win)
     lbl_shot_clock.setText("Shot Clock: ")
-    lbl_shot_clock.move(50, 50)
+    lbl_shot_clock.move(40, 50)
 
     lbl_reset_shot_clock = QtWidgets.QLabel(win)
     lbl_reset_shot_clock.setText("Reset Shot Clock:")
-    lbl_reset_shot_clock.move(50, 90)
+    lbl_reset_shot_clock.move(40, 90)
 
     lbl_ten_second_violation = QtWidgets.QLabel(win)
     lbl_ten_second_violation.setText("10 Second Backcourt Violation")
-    lbl_ten_second_violation.move(50,130)
+    lbl_ten_second_violation.move(40,130)
     
     lbl_enable_target_score = QtWidgets.QLabel(win)
     lbl_enable_target_score.setText("Target Score")
-    lbl_enable_target_score.move(50,170)
+    lbl_enable_target_score.move(40,170)
 
     lbl_target_score = QtWidgets.QLabel(win)
     lbl_target_score.setText("OT Target Score:")
-    lbl_target_score.move(50, 210)
+    lbl_target_score.move(40, 210)
 
     lbl_overtime_deadline = QtWidgets.QLabel(win)
     lbl_overtime_deadline.setText("OT Deadline (minutes):")
     lbl_overtime_deadline.adjustSize()
-    lbl_overtime_deadline.move(50, 250)
+    lbl_overtime_deadline.move(40, 250)
     
     lbl_enable_halves = QtWidgets.QLabel(win)
     lbl_enable_halves.setText("Two Halves")
-    lbl_enable_halves.move(50, 290)
+    lbl_enable_halves.move(40, 290)
 
     lbl_gleague_ft_rule = QtWidgets.QLabel(win)
     lbl_gleague_ft_rule.setText("G-League FT Rule")
-    lbl_gleague_ft_rule.move(50, 330)
+    lbl_gleague_ft_rule.move(40, 330)
 
     lbl_internal_game_year = QtWidgets.QLabel(win)
     lbl_internal_game_year.setText("Internal Game Year")
-    lbl_internal_game_year.move(50, 370)
+    lbl_internal_game_year.move(40, 370)
 
     lbl_disable_threes = QtWidgets.QLabel(win)
-    lbl_disable_threes.setText("Disable Three Pointers?")
-    lbl_disable_threes.move(50, 410)
+    lbl_disable_threes.setText("Disable 3-Pointers?")
+    lbl_disable_threes.move(40, 410)
+
+    lbl_enable_shortened_threes = QtWidgets.QLabel(win)
+    lbl_enable_shortened_threes.setText("Shorten 3-Pointers?")
+    lbl_enable_shortened_threes.move(40, 450)
+
+    lbl_shortened_threes = QtWidgets.QLabel(win)
+    lbl_shortened_threes.setText("3-Point length (ft):")
+    lbl_shortened_threes.move(40, 490)
 
     txt_shot_clock = QtWidgets.QLineEdit(win)
     txt_shot_clock.move(200, 50)
@@ -363,9 +399,44 @@ def window():
     txt_internal_game_date_year.setPlaceholderText("2013")
     txt_internal_game_date_year.setText("2013")
 
+    def disable_threes(self):
+        global shorten_threes_enabled, threes_disabled
+        if checkbox_disable_threes.isChecked():
+            print("3s: Disabled")
+            threes_disabled = True
+            checkbox_shorten_threes.setChecked(False)
+            enable_shortened_threes(checkbox_shorten_threes)
+            checkbox_shorten_threes.setDisabled(True)
+        else:
+            print("3s: Enabled")
+            threes_disabled = False
+            checkbox_shorten_threes.setDisabled(False)
+
     checkbox_disable_threes = QtWidgets.QCheckBox(win)
     checkbox_disable_threes.setChecked(False)
     checkbox_disable_threes.move(200, 410)
+    checkbox_disable_threes.clicked.connect(disable_threes)
+
+    def enable_shortened_threes(self):
+        global shorten_threes_enabled
+        if checkbox_shorten_threes.isChecked():
+            print("Shortened threes on.")
+            txt_shortened_threes_length.setDisabled(False)
+            shorten_threes_enabled = True
+        else:
+            print("Shortened threes off.")
+            txt_shortened_threes_length.setDisabled(True)
+            shorten_threes_enabled = False
+    
+    checkbox_shorten_threes = QtWidgets.QCheckBox(win)
+    checkbox_shorten_threes.setChecked(False)
+    checkbox_shorten_threes.move(200, 450)
+    checkbox_shorten_threes.clicked.connect(enable_shortened_threes)
+
+    txt_shortened_threes_length = QtWidgets.QLineEdit(win)
+    txt_shortened_threes_length.move(200, 490)
+    txt_shortened_threes_length.setDisabled(True)
+    txt_shortened_threes_length.setText(str(shortened_three_point_length / 30.48))
 
     def apply_clicked(self):
         print("New values applied.")
@@ -373,6 +444,7 @@ def window():
         set_shot_clock_reset(txt_reset_shot_clock.text())
         set_target_score(txt_target_score.text())
         set_overtime_deadline(txt_overtime_deadline.text())
+        set_shortened_three_length(txt_shortened_threes_length.text())
         global ten_second_violation_enabled, halves_enabled, g_league_free_throw_rule_enabled, threes_disabled
         if checkbox_enable_ten_second.isChecked():
             print("Ten second backcourt enabled.")
@@ -394,12 +466,6 @@ def window():
         else:
             print("G-League FTs: Disabled")
             g_league_free_throw_rule_enabled = False
-        if checkbox_disable_threes.isChecked():
-            print("3s: Disabled")
-            threes_disabled = True
-        else:
-            print("3s: Enabled")
-            threes_disabled = False
         try:
             mem = Pymem("nba2k14.exe")
             module = module_from_name(mem.process_handle, "nba2k14.exe").lpBaseOfDll
@@ -414,7 +480,7 @@ def window():
     btn_apply = QtWidgets.QPushButton(win)
     btn_apply.setText("Apply")
     btn_apply.clicked.connect(apply_clicked)
-    btn_apply.move(200, 450)
+    btn_apply.move(200, 530)
     thread1 = QThread1()
     thread1.start()
 

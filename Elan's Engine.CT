@@ -2,12 +2,6 @@
 <CheatTable CheatEngineTableVersion="45">
   <CheatEntries>
     <CheatEntry>
-      <ID>4</ID>
-      <Description>"No description"</Description>
-      <VariableType>Byte</VariableType>
-      <Address>nba2k14.exe+11DD541</Address>
-    </CheatEntry>
-    <CheatEntry>
       <ID>11</ID>
       <Description>"Time"</Description>
       <Options moHideChildren="1"/>
