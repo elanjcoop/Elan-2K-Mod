@@ -26,11 +26,6 @@ BUGS:
 (if shot clock target is < 24).
 - Offensive rebound will auto trigger to target_shot_clock_reset even if the current shot clock > target_shot_clock_reset;
 This is a problem that cannot be solved simply due to auto 24 reset prior to logical time evaluation.
-
-
-TO DO:
-Play halves
-Disable ELO score system
 """
 
 SHOT_CLOCK_ADDRESS = 0x19EE654
@@ -53,8 +48,8 @@ FREE_THROWS_VALUE_ADDRESS = 0x19EE94C
 OFFICIAL_RULES_SHOT_CLOCK = 24.0000
 OFFICIAL_BACKCOURT_TIME = 8
 
-target_shot_clock_full = 24.000001
-target_shot_clock_reset = 14.000001
+target_shot_clock_full = 23.999999
+target_shot_clock_reset = 13.999999
 target_target_score = 5
 target_overtime_deadline = 3600.0
 shortened_three_point_length = 601.98
@@ -83,23 +78,23 @@ def set_shot_clock_full(input_shot_clock_full):
     try:
         input_shot_clock_full = float(input_shot_clock_full)
     except:
-        input_shot_clock_full = 24.000001
+        input_shot_clock_full = 23.999999
     if input_shot_clock_full != 0 and input_shot_clock_full != 24 and input_shot_clock_full != None:
         global target_shot_clock_full
-        target_shot_clock_full = float(input_shot_clock_full) + 0.000001
+        target_shot_clock_full = float(input_shot_clock_full) - 0.000001
     else:
-        target_shot_clock_full = 24.000001
+        target_shot_clock_full = 23.999999
 
 def set_shot_clock_reset(input_shot_clock_reset):
     try:
         float(input_shot_clock_reset)
     except:
-        input_shot_clock_reset = 14.000001
+        input_shot_clock_reset = 13.999999
     if input_shot_clock_reset != "":
         global target_shot_clock_reset
-        target_shot_clock_reset = float(input_shot_clock_reset) + 0.000001
+        target_shot_clock_reset = float(input_shot_clock_reset) - 0.000001
     else:
-        target_shot_clock_reset = 14.000001
+        target_shot_clock_reset = 13.999999
 
 def set_target_score(input_target_score):
     try:
@@ -164,6 +159,7 @@ def g_league_free_throw_rule(mem, module):
     global away_team_fouls, home_team_fouls, time_remaining
     #print("HI")
     if mem.read_short(module + FREE_THROWS_REMAINING_ADDRESS) > 1:
+        time.sleep(2)
         time_remaining = mem.read_float(module + PERIOD_TIME_LEFT)
         fts_remaining = mem.read_short(module + FREE_THROWS_REMAINING_ADDRESS)
         print(fts_remaining)
