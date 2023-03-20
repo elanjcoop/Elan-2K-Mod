@@ -29,3 +29,9 @@ How to build for yourself:
 ## MORE
 Read more about the mod here:
 https://forums.nba-live.com/viewtopic.php?f=153&t=114893
+
+## AGENDA
+1. Add settings.ini for value saving.
+2. Add ability to override quarter length.
+3. Create tutorial for tool.
+4. Fix Shot Clock +1 bug.
