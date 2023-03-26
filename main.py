@@ -327,10 +327,19 @@ def window():
         else:
             base_path = os.path.abspath(".")
         return os.path.join(base_path, relative_path)
+    def config_path(relative_path):
+        if getattr(sys, 'frozen', False):
+            base_path = os.path.dirname(sys.executable)
+            base_path = os.path.join(base_path, "..")
+        else:
+            base_path = os.path.abspath(".")
+        return os.path.join(base_path, relative_path)
     win.setWindowIcon(QIcon(resource_path('resources/images/ja.jpg')))
 
     parser = ConfigParser()
-    parser.read(resource_path('dev.cfg'))
+    #config_path('resources/files/dev.cfg')
+    parser.read(config_path('resources/files/dev.cfg'))
+    #parser.read('resources/files/dev.cfg')
 
     lbl_please_open_game = QtWidgets.QLabel(win)
     lbl_please_open_game.setText("")
@@ -422,7 +431,7 @@ def window():
             txt_overtime_deadline.setDisabled(True)
             target_score_enabled = False
             parser.set('settings', 'target_score_enabled', 'False')
-        with open(resource_path("dev.cfg"), "w") as f:
+        with open(config_path('resources/files/dev.cfg'), "w") as f:
             parser.write(f)
 
     checkbox_enable_target_score = QtWidgets.QCheckBox(win)
@@ -459,7 +468,7 @@ def window():
             threes_disabled = False
             checkbox_shorten_threes.setDisabled(False)
             parser.set('settings', 'disable_three_pointers_enabled', 'False')
-        with open(resource_path("dev.cfg"), "w") as f:
+        with open(config_path('resources/files/dev.cfg'), "w") as f:
             parser.write(f)
 
     checkbox_disable_threes = QtWidgets.QCheckBox(win)
@@ -478,7 +487,7 @@ def window():
             txt_shortened_threes_length.setDisabled(True)
             shorten_threes_enabled = False
             parser.set('settings', 'shorten_three_pointers_enabled', 'False')
-        with open(resource_path("dev.cfg"), "w") as f:
+        with open(config_path('resources/files/dev.cfg'), "w") as f:
             parser.write(f)
     
     checkbox_shorten_threes = QtWidgets.QCheckBox(win)
@@ -500,7 +509,7 @@ def window():
             txt_override_period_length.setDisabled(True)
             override_period_length_enabled = False
             parser.set('settings', 'override_period_length_enabled', 'False')
-        with open(resource_path("dev.cfg"), "w") as f:
+        with open(config_path('resources/files/dev.cfg'), "w") as f:
             parser.write(f)
 
     checkbox_override_period_length = QtWidgets.QCheckBox(win)
@@ -561,9 +570,9 @@ def window():
         parser.set('settings', 'ot_deadline', txt_overtime_deadline.text())
         parser.set('settings', 'shortened_three_pointer_length', txt_shortened_threes_length.text())
         parser.set('settings', 'period_length', txt_override_period_length.text())
-        with open(resource_path("dev.cfg"), "w") as f:
+        with open(config_path('resources/files/dev.cfg'), "w") as f:
             parser.write(f)
-        
+
     txt_shot_clock.setText(parser.get('settings', 'shot_clock'))
     txt_reset_shot_clock.setText(parser.get('settings', 'reset_shot_clock'))
     checkbox_enable_ten_second.setChecked(parser.get('settings', 'ten_second_backcourt_enabled') == 'True')
