@@ -1,5 +1,5 @@
 from pymem import *
-from pymem.process import *
+import pymem.process as process
 import time
 import sys
 import os
@@ -247,7 +247,7 @@ def start_mod():
     global game_opened
     try:
         mem = Pymem("nba2k14.exe")
-        module = module_from_name(mem.process_handle, "nba2k14.exe").lpBaseOfDll
+        module = process.module_from_name(mem.process_handle, "nba2k14.exe").lpBaseOfDll
         prev_home_off_reb_count = mem.read_short(module + HOME_OFF_REB_ADDRESS)
         prev_away_off_reb_count = mem.read_short(module + AWAY_OFF_REB_ADDRESS)
     except:
@@ -255,7 +255,7 @@ def start_mod():
     while game_opened == False:
         try:
             mem = Pymem("nba2k14.exe")
-            module = module_from_name(mem.process_handle, "nba2k14.exe").lpBaseOfDll
+            module = process.module_from_name(mem.process_handle, "nba2k14.exe").lpBaseOfDll
             game_opened = True
         except pymem.exception.ProcessNotFound:
                 print("Please open NBA 2K14.")
@@ -330,7 +330,7 @@ def window():
     win.setWindowIcon(QIcon(resource_path('resources/images/ja.jpg')))
 
     parser = ConfigParser()
-    parser.read('dev.cfg')
+    parser.read(resource_path('dev.cfg'))
 
     lbl_please_open_game = QtWidgets.QLabel(win)
     lbl_please_open_game.setText("")
@@ -422,6 +422,8 @@ def window():
             txt_overtime_deadline.setDisabled(True)
             target_score_enabled = False
             parser.set('settings', 'target_score_enabled', 'False')
+        with open(resource_path("dev.cfg"), "w") as f:
+            parser.write(f)
 
     checkbox_enable_target_score = QtWidgets.QCheckBox(win)
     checkbox_enable_target_score.move(230, 170)
@@ -451,10 +453,14 @@ def window():
             checkbox_shorten_threes.setChecked(False)
             enable_shortened_threes(checkbox_shorten_threes)
             checkbox_shorten_threes.setDisabled(True)
+            parser.set('settings', 'disable_three_pointers_enabled', 'True')
         else:
             print("3s: Enabled")
             threes_disabled = False
             checkbox_shorten_threes.setDisabled(False)
+            parser.set('settings', 'disable_three_pointers_enabled', 'False')
+        with open(resource_path("dev.cfg"), "w") as f:
+            parser.write(f)
 
     checkbox_disable_threes = QtWidgets.QCheckBox(win)
     checkbox_disable_threes.move(230, 410)
@@ -466,10 +472,14 @@ def window():
             print("Shortened threes on.")
             txt_shortened_threes_length.setDisabled(False)
             shorten_threes_enabled = True
+            parser.set('settings', 'shorten_three_pointers_enabled', 'True')
         else:
             print("Shortened threes off.")
             txt_shortened_threes_length.setDisabled(True)
             shorten_threes_enabled = False
+            parser.set('settings', 'shorten_three_pointers_enabled', 'False')
+        with open(resource_path("dev.cfg"), "w") as f:
+            parser.write(f)
     
     checkbox_shorten_threes = QtWidgets.QCheckBox(win)
     checkbox_shorten_threes.move(230, 450)
@@ -484,10 +494,14 @@ def window():
             print("Override game length enabled.")
             txt_override_period_length.setDisabled(False)
             override_period_length_enabled = True
+            parser.set('settings', 'override_period_length_enabled', 'True')
         else:
             print("Override game length disabled.")
             txt_override_period_length.setDisabled(True)
             override_period_length_enabled = False
+            parser.set('settings', 'override_period_length_enabled', 'False')
+        with open(resource_path("dev.cfg"), "w") as f:
+            parser.write(f)
 
     checkbox_override_period_length = QtWidgets.QCheckBox(win)
     checkbox_override_period_length.move(230, 530)
@@ -499,17 +513,6 @@ def window():
 
     def apply_clicked(self = None):
         print("New values applied.")
-
-        #print(resource_path('dev.txt'))
-        """ with os.open("dev.cfg", "w") as f:
-            print("balls") """
-            #parser.write(f)
-        f = open('dev_test.cfg', 'w')
-        #dev.test()
-        #parser.write(f)
-        f.writelines(["hello elan", "i am cool"])
-        f.close()
-
         set_shot_clock_full(txt_shot_clock.text())
         set_shot_clock_reset(txt_reset_shot_clock.text())
         set_target_score(txt_target_score.text())
@@ -520,38 +523,47 @@ def window():
         if checkbox_enable_ten_second.isChecked():
             print("Ten second backcourt enabled.")
             ten_second_violation_enabled = True
+            parser.set('settings', 'ten_second_backcourt_enabled', 'True')
         else:
             print("Ten second backcourt disabled.")
             ten_second_violation_enabled = False
+            parser.set('settings', 'ten_second_backcourt_enabled', 'False')
         if checkbox_enable_halves.isChecked():
             print("Halves enabled.")
             halves_enabled = True
-            pass
+            parser.set('settings', 'two_halves_enabled', 'True')
         else:
             print("Halves disabled.")
             halves_enabled = False
-            pass
+            parser.set('settings', 'two_halves_enabled', 'False')
         if checkbox_gleague_ft_rule.isChecked():
             print("G-League FTs: Enabled")
             g_league_free_throw_rule_enabled = True
+            parser.set('settings', 'g_league_ft_rule_enabled', 'True')
         else:
             print("G-League FTs: Disabled")
             g_league_free_throw_rule_enabled = False
-        if checkbox_override_period_length.isChecked():
-            override_period_length_enabled = True
+            parser.set('settings', 'g_league_ft_rule_enabled', 'False')
         try:
             mem = Pymem("nba2k14.exe")
-            module = module_from_name(mem.process_handle, "nba2k14.exe").lpBaseOfDll
+            module = process.module_from_name(mem.process_handle, "nba2k14.exe").lpBaseOfDll
             lbl_please_open_game.setText("")
             if int(txt_internal_game_date_year.text()) >= 0:
                 mem.write_short(module + INTERNAL_GAME_YEAR_ADDRESS, int(txt_internal_game_date_year.text()))
+                parser.set('settings', 'internal_game_year', txt_internal_game_date_year.text())
         except:
             lbl_please_open_game.setText("Please open NBA 2K14 / illegal game year.")
             lbl_please_open_game.setStyleSheet('QLabel{color: red}')
             lbl_please_open_game.adjustSize()
+        parser.set('settings', 'shot_clock', txt_shot_clock.text())
+        parser.set('settings', 'reset_shot_clock', txt_reset_shot_clock.text())
+        parser.set('settings', 'ot_target_score', txt_target_score.text())
+        parser.set('settings', 'ot_deadline', txt_overtime_deadline.text())
+        parser.set('settings', 'shortened_three_pointer_length', txt_shortened_threes_length.text())
+        parser.set('settings', 'period_length', txt_override_period_length.text())
+        with open(resource_path("dev.cfg"), "w") as f:
+            parser.write(f)
         
-
-    #print(parser.get('settings', 'shot_clock'))
     txt_shot_clock.setText(parser.get('settings', 'shot_clock'))
     txt_reset_shot_clock.setText(parser.get('settings', 'reset_shot_clock'))
     checkbox_enable_ten_second.setChecked(parser.get('settings', 'ten_second_backcourt_enabled') == 'True')
@@ -571,6 +583,10 @@ def window():
     txt_override_period_length.setDisabled(parser.get('settings', 'override_period_length_enabled') == 'False')
     txt_override_period_length.setText(parser.get('settings', 'period_length'))
     apply_clicked()
+
+    if checkbox_disable_threes.isChecked():
+        checkbox_shorten_threes.setChecked(False)
+        checkbox_shorten_threes.setDisabled(True)
 
     btn_apply = QtWidgets.QPushButton(win)
     btn_apply.setText("Apply")

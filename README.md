@@ -32,11 +32,11 @@ https://forums.nba-live.com/viewtopic.php?f=153&t=114893
 
 ## SIDE EFFECTS
 1. Winning on first free throw with target score on will have players walk around for a while.
-2. Shooting foul on shortened threes will onl;y lead to two shots, not three.
+2. Shooting foul on shortened threes will only lead to two shots, not three.
+3. Running the mod before the game loads will likely lead to "override period length" not working.
 
 ## AGENDA
-1. Add settings.ini for value saving.
-2. Create tutorial for tool.
-3. Create consistency with Apply button.
-4. Add four-pointers.
-5. Make qualifying shortened threes receive a 3-Pt foul shot.
+1. Create tutorial for tool.
+2. Create consistency with Apply button.
+3. Add four-pointers.
+4. Make qualifying shortened threes receive a 3-Pt foul shot.
