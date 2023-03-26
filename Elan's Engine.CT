@@ -15,6 +15,16 @@
           <Address>nba2k14.exe+19EE5EC</Address>
         </CheatEntry>
         <CheatEntry>
+          <ID>51</ID>
+          <Description>"Period Length (Play Now)"</Description>
+          <ShowAsSigned>0</ShowAsSigned>
+          <VariableType>Byte</VariableType>
+          <Address>"nba2k14.exe"+011472E4</Address>
+          <Offsets>
+            <Offset>50</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
           <ID>12</ID>
           <Description>"Time Left in Period"</Description>
           <ShowAsSigned>0</ShowAsSigned>
@@ -157,6 +167,13 @@
           <ShowAsSigned>0</ShowAsSigned>
           <VariableType>Byte</VariableType>
           <Address>nba2k14.exe+19EE45C</Address>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>52</ID>
+          <Description>"Active Shot?"</Description>
+          <ShowAsSigned>0</ShowAsSigned>
+          <VariableType>Byte</VariableType>
+          <Address>nba2k14.exe+19EE8F8</Address>
         </CheatEntry>
         <CheatEntry>
           <ID>31</ID>

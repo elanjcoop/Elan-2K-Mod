@@ -36,7 +36,7 @@ https://forums.nba-live.com/viewtopic.php?f=153&t=114893
 
 ## AGENDA
 1. Add settings.ini for value saving.
-2. Add ability to override quarter length.
-3. Create tutorial for tool.
-4. Create consistency with Apply button.
-5. Add four-pointers.
+2. Create tutorial for tool.
+3. Create consistency with Apply button.
+4. Add four-pointers.
+5. Make qualifying shortened threes receive a 3-Pt foul shot.

@@ -2,12 +2,12 @@ from pymem import *
 from pymem.process import *
 import time
 import sys
+import os
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import QApplication, QMainWindow
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import pyqtSignal
-
-import time
+from configparser import ConfigParser
 
 
 """
@@ -27,12 +27,12 @@ BUGS:
 - Offensive rebound will auto trigger to target_shot_clock_reset even if the current shot clock > target_shot_clock_reset;
 This is a problem that cannot be solved simply due to auto 24 reset prior to logical time evaluation.
 """
-
+### STACK ADDRESSES ###
 SHOT_CLOCK_ADDRESS = 0x19EE654
 HOME_OFF_REB_ADDRESS = 0x19E23B0
 AWAY_OFF_REB_ADDRESS = 0x19E2834
 PERIOD_ADDRESS = 0x19EE5EC
-PERIOD_TIME_LEFT = 0x19EE638
+PERIOD_TIME_LEFT_ADDRESS = 0x19EE638
 BACKCOURT_TIME_LEFT_ADDRESS = 0x19EE670
 HOME_SCORE_ADDRESS = 0x19E2188
 AWAY_SCORE_ADDRESS = 0x19E260C
@@ -44,6 +44,11 @@ HOME_GAME_FOULS_ADDRESS = 0x19E2540
 AWAY_GAME_FOULS_ADDRESS = 0x19E29C4
 FREE_THROWS_REMAINING_ADDRESS = 0x19EE8DC
 FREE_THROWS_VALUE_ADDRESS = 0x19EE94C
+ACTIVE_SHOT_ADDRESS = 0x19EE8F8
+### HEAP LOCATIONS ###
+PERIOD_LENGTH_PN_LOCATION = 0x011472E4
+### HEAP OFFSETS ###
+PERIOD_LENGTH_PN_OFFSETS = [0x50]
 
 OFFICIAL_RULES_SHOT_CLOCK = 24.0000
 OFFICIAL_BACKCOURT_TIME = 8
@@ -53,6 +58,7 @@ target_shot_clock_reset = 13.999999
 target_target_score = 5
 target_overtime_deadline = 3600.0
 shortened_three_point_length = 601.98
+override_period_length_value = 20
 
 prev_home_off_reb_count, prev_away_off_reb_count = 0, 0
 
@@ -61,6 +67,9 @@ has_overtime = False
 overtime_start_home_score, overtime_start_away_score = 0, 0
 home_team_fouls, away_team_fouls = 0,0
 time_remaining = 0.0
+shot_length = 0
+previous_shot_length = 0
+start_time = 0
 
 mem, module = 0, 0
 
@@ -73,6 +82,16 @@ halves_enabled = False
 g_league_free_throw_rule_enabled = False
 threes_disabled = False
 shorten_threes_enabled = False
+override_period_length_enabled = False
+
+
+def get_pointer_address(mem, module, location, offsets):
+    address = mem.read_int(module + location)
+    for offset in offsets:
+        if offset != offsets[-1]:
+            address = mem.read_int(address + offset)
+    address = address + offsets[-1]
+    return address
 
 def set_shot_clock_full(input_shot_clock_full):
     try:
@@ -126,10 +145,21 @@ def set_shortened_three_length(input_shortened_three_length):
     global shortened_three_point_length
     if input_shortened_three_length > 0.0 and input_shortened_three_length < 99.0:
         shortened_three_point_length = input_shortened_three_length * 30.48
-        print("Shortened three length: ", shortened_three_point_length, sep = '')
     else:
         shortened_three_point_length = 723.9
-        print("Shortened three length: ", shortened_three_point_length, sep = '')
+    print("Shortened three length: ", shortened_three_point_length, sep = '')
+
+def set_override_period_length(input_period_length):
+    try:
+        input_period_length = int(input_period_length)
+    except:
+        input_period_length = 20
+    global override_period_length_value
+    if input_period_length > 0 and input_period_length < 100:
+        override_period_length_value = input_period_length
+    else:
+        override_period_length_value = 20
+    print("Override period length: ", override_period_length_value, sep = '')
 
 def check_overtime_started(mem, module):
     if mem.read_short(module + PERIOD_ADDRESS) == 5:
@@ -157,43 +187,55 @@ def check_four_pointer(mem, module):
 
 def g_league_free_throw_rule(mem, module):
     global away_team_fouls, home_team_fouls, time_remaining
-    #print("HI")
-    if mem.read_short(module + FREE_THROWS_REMAINING_ADDRESS) > 1:
-        time.sleep(2)
-        time_remaining = mem.read_float(module + PERIOD_TIME_LEFT)
-        fts_remaining = mem.read_short(module + FREE_THROWS_REMAINING_ADDRESS)
-        print(fts_remaining)
-        mem.write_short(module + FREE_THROWS_VALUE_ADDRESS, fts_remaining)
-        mem.write_short(module + FREE_THROWS_REMAINING_ADDRESS, 1)
-    if time_remaining != mem.read_float(module + PERIOD_TIME_LEFT):
-        mem.write_short(module + FREE_THROWS_VALUE_ADDRESS, 1)
-        time_remaining = mem.read_float(module + PERIOD_TIME_LEFT)
+    if (mem.read_short(module + PERIOD_ADDRESS) <= 3 or
+    (mem.read_short(module + PERIOD_ADDRESS) == 4 and mem.read_float(module + PERIOD_TIME_LEFT_ADDRESS) > 120.0)):
+        if mem.read_short(module + FREE_THROWS_REMAINING_ADDRESS) > 1:
+            time.sleep(2)
+            time_remaining = mem.read_float(module + PERIOD_TIME_LEFT_ADDRESS)
+            fts_remaining = mem.read_short(module + FREE_THROWS_REMAINING_ADDRESS)
+            print("FTs remaining: ", fts_remaining, sep = '')
+            mem.write_short(module + FREE_THROWS_VALUE_ADDRESS, fts_remaining)
+            mem.write_short(module + FREE_THROWS_REMAINING_ADDRESS, 1)
+        if time_remaining != mem.read_float(module + PERIOD_TIME_LEFT_ADDRESS):
+            mem.write_short(module + FREE_THROWS_VALUE_ADDRESS, 1)
+            time_remaining = mem.read_float(module + PERIOD_TIME_LEFT_ADDRESS)
 
 def threes_off(mem, module):
     if mem.read_short(module + THREE_POINTER_VALUE_ADDRESS) == 3:
         mem.write_short(module + THREE_POINTER_VALUE_ADDRESS, 2)
 
 def shorten_threes(mem, module):
-    if mem.read_float(module + SHOT_LENGTH_ADDRESS) > shortened_three_point_length:
+    global shot_length, previous_shot_length, start_time
+    shot_length = mem.read_float(module + SHOT_LENGTH_ADDRESS)
+    active_shot = (mem.read_short(module + ACTIVE_SHOT_ADDRESS) == 1)
+    if shot_length > shortened_three_point_length and shot_length != previous_shot_length:
         mem.write_short(module + TWO_POINTER_VALUE_ADDRESS, 3)
-    else:
+    if not active_shot and time.time() - start_time > 1:
         mem.write_short(module + TWO_POINTER_VALUE_ADDRESS, 2)
+        previous_shot_length = shot_length
+        start_time = time.time()
 
 
 #If first free throw goes in, there is a bug.
 def check_target_score_reached(mem, module):
     global has_overtime, overtime_start_home_score, overtime_start_away_score
-    #if mem.read_float(module + PERIOD_TIME_LEFT) == 0.30000001192092896:
-        #mem.write_float(module + PERIOD_TIME_LEFT, 0.0)
+    #if mem.read_float(module + PERIOD_TIME_LEFT_ADDRESS) == 0.30000001192092896:
+        #mem.write_float(module + PERIOD_TIME_LEFT_ADDRESS, 0.0)
     if (mem.read_short(module + HOME_SCORE_ADDRESS) - overtime_start_home_score >= target_target_score or
         mem.read_short(module + AWAY_SCORE_ADDRESS) - overtime_start_away_score >= target_target_score):  
-        mem.write_float(module + PERIOD_TIME_LEFT, 0.00000000000000000)
+        mem.write_float(module + PERIOD_TIME_LEFT_ADDRESS, 0.00000000000000000)
         print("Current home score: ", mem.read_short(module + HOME_SCORE_ADDRESS), " vs start of OT: ", overtime_start_home_score, sep = '')
         print("Current away score: ", mem.read_short(module + AWAY_SCORE_ADDRESS), " vs start of OT: ", overtime_start_away_score, sep = '')
         print("Game over!")
     if mem.read_short(module + PERIOD_ADDRESS) != 5:
         has_overtime = False
         print("New game!")
+
+def override_period_length(mem, module):
+    global override_period_length_enabled
+    PERIOD_LENGTH_PN_ADDRESS = get_pointer_address(mem, module, PERIOD_LENGTH_PN_LOCATION, PERIOD_LENGTH_PN_OFFSETS)
+    mem.write_int(PERIOD_LENGTH_PN_ADDRESS, override_period_length_value)
+    override_period_length_enabled = False
 
 class QThread1(QtCore.QThread):
     sig = pyqtSignal(str)
@@ -228,15 +270,15 @@ def start_mod():
                 mem.write_float(module + SHOT_CLOCK_ADDRESS, target_shot_clock_reset)
                 prev_home_off_reb_count = mem.read_short(module + HOME_OFF_REB_ADDRESS)
                 prev_away_off_reb_count = mem.read_short(module + AWAY_OFF_REB_ADDRESS)
-                print("Home team offensive rebound! Soft reset shot clock with ", round(mem.read_float(module + PERIOD_TIME_LEFT), 2), " remaining in Q", mem.read_short(module + PERIOD_ADDRESS), sep = '')
+                print("Home team offensive rebound! Soft reset shot clock with ", round(mem.read_float(module + PERIOD_TIME_LEFT_ADDRESS), 2), " remaining in Q", mem.read_short(module + PERIOD_ADDRESS), sep = '')
             elif mem.read_short(module + AWAY_OFF_REB_ADDRESS) != prev_away_off_reb_count:
                 mem.write_float(module + SHOT_CLOCK_ADDRESS, target_shot_clock_reset)
                 prev_home_off_reb_count = mem.read_short(module + HOME_OFF_REB_ADDRESS)
                 prev_away_off_reb_count = mem.read_short(module + AWAY_OFF_REB_ADDRESS)
-                print("Away team offensive rebound! Soft reset shot clock with ", round(mem.read_float(module + PERIOD_TIME_LEFT), 2), " remaining in Q", mem.read_short(module + PERIOD_ADDRESS), sep = '')
+                print("Away team offensive rebound! Soft reset shot clock with ", round(mem.read_float(module + PERIOD_TIME_LEFT_ADDRESS), 2), " remaining in Q", mem.read_short(module + PERIOD_ADDRESS), sep = '')
             elif mem.read_float(module + SHOT_CLOCK_ADDRESS) == OFFICIAL_RULES_SHOT_CLOCK:
                 mem.write_float(module + SHOT_CLOCK_ADDRESS, target_shot_clock_full)
-                #print("Shot clock reset with ", round(mem.read_float(module + PERIOD_TIME_LEFT), 2), " remaining in Q", mem.read_short(module + PERIOD_ADDRESS), sep = '')
+                #print("Shot clock reset with ", round(mem.read_float(module + PERIOD_TIME_LEFT_ADDRESS), 2), " remaining in Q", mem.read_short(module + PERIOD_ADDRESS), sep = '')
             if shorten_threes_enabled:
                 shorten_threes(mem, module)
             else:
@@ -253,8 +295,8 @@ def start_mod():
                 if not has_overtime:
                     check_overtime_started(mem, module)
                 else:
-                    if mem.read_float(module + PERIOD_TIME_LEFT) % 60 == 0.0000 and mem.read_float(module + PERIOD_TIME_LEFT) > 0.4:
-                        mem.write_float(module + PERIOD_TIME_LEFT, target_overtime_deadline)
+                    if mem.read_float(module + PERIOD_TIME_LEFT_ADDRESS) % 60 == 0.0000 and mem.read_float(module + PERIOD_TIME_LEFT_ADDRESS) > 0.4:
+                        mem.write_float(module + PERIOD_TIME_LEFT_ADDRESS, target_overtime_deadline)
                     check_target_score_reached(mem, module)
             else:
                 has_overtime = False
@@ -266,6 +308,8 @@ def start_mod():
             else:
                 if mem.read_short(module + THREE_POINTER_VALUE_ADDRESS) == 2:
                     mem.write_short(module + THREE_POINTER_VALUE_ADDRESS, 3)
+            if override_period_length_enabled:
+                override_period_length(mem, module)
         except:
             exit
 
@@ -273,7 +317,7 @@ def window():
     app = QApplication(sys.argv)
     win = QMainWindow()
 
-    win.setGeometry(1200, 300, 350, 630)
+    win.setGeometry(1200, 300, 400, 700)
     win.setWindowTitle("Elan's Mod")
     win.setWindowIcon(QIcon("ja.jpg"))
     def resource_path(relative_path):
@@ -284,7 +328,9 @@ def window():
             base_path = os.path.abspath(".")
         return os.path.join(base_path, relative_path)
     win.setWindowIcon(QIcon(resource_path('resources/images/ja.jpg')))
-    win.setToolTip("Ja")
+
+    parser = ConfigParser()
+    parser.read('dev.cfg')
 
     lbl_please_open_game = QtWidgets.QLabel(win)
     lbl_please_open_game.setText("")
@@ -294,6 +340,7 @@ def window():
     lbl_shot_clock = QtWidgets.QLabel(win)
     lbl_shot_clock.setText("Shot Clock: ")
     lbl_shot_clock.move(40, 50)
+    #lbl_shot_clock.setToolTip("Bonjour")
 
     lbl_reset_shot_clock = QtWidgets.QLabel(win)
     lbl_reset_shot_clock.setText("Reset Shot Clock:")
@@ -340,19 +387,26 @@ def window():
     lbl_shortened_threes.setText("3-Point length (ft):")
     lbl_shortened_threes.move(40, 490)
 
+    lbl_override_period_length = QtWidgets.QLabel(win)
+    lbl_override_period_length.setText("Override period length?")
+    lbl_override_period_length.move(40, 530)
+    lbl_override_period_length.setFixedWidth(140)
+
+    lbl_period_length = QtWidgets.QLabel(win)
+    lbl_period_length.setText("Period length (minutes):")
+    lbl_period_length.move(40, 570)
+    lbl_period_length.setFixedWidth(140)
+
     txt_shot_clock = QtWidgets.QLineEdit(win)
-    txt_shot_clock.move(200, 50)
+    txt_shot_clock.move(230, 50)
     txt_shot_clock.setPlaceholderText("24")
-    txt_shot_clock.setText("24")
 
     txt_reset_shot_clock = QtWidgets.QLineEdit(win)
-    txt_reset_shot_clock.move(200, 90)
+    txt_reset_shot_clock.move(230, 90)
     txt_reset_shot_clock.setPlaceholderText("14")
-    txt_reset_shot_clock.setText("14")
 
     checkbox_enable_ten_second = QtWidgets.QCheckBox(win)
-    checkbox_enable_ten_second.setChecked(False)
-    checkbox_enable_ten_second.move(200, 130)
+    checkbox_enable_ten_second.move(230, 130)
 
     def enable_target_score_clicked(self):
         global target_score_enabled
@@ -361,39 +415,33 @@ def window():
             txt_target_score.setDisabled(False)
             txt_overtime_deadline.setDisabled(False)
             target_score_enabled = True
+            parser.set('settings', 'target_score_enabled', 'True')
         else:
             print("Target score off.")
             txt_target_score.setDisabled(True)
             txt_overtime_deadline.setDisabled(True)
             target_score_enabled = False
+            parser.set('settings', 'target_score_enabled', 'False')
 
     checkbox_enable_target_score = QtWidgets.QCheckBox(win)
-    checkbox_enable_target_score.setChecked(False)
-    checkbox_enable_target_score.move(200, 170)
+    checkbox_enable_target_score.move(230, 170)
     checkbox_enable_target_score.clicked.connect(enable_target_score_clicked)
 
     txt_target_score = QtWidgets.QLineEdit(win)
-    txt_target_score.move(200, 210)
-    txt_target_score.setDisabled(True)
-    txt_target_score.setText("5")
+    txt_target_score.move(230, 210)
     
     txt_overtime_deadline = QtWidgets.QLineEdit(win)
-    txt_overtime_deadline.move(200, 250)
-    txt_overtime_deadline.setDisabled(True)
-    txt_overtime_deadline.setText("10")
+    txt_overtime_deadline.move(230, 250)
 
     checkbox_enable_halves = QtWidgets.QCheckBox(win)
-    checkbox_enable_halves.setChecked(False)
-    checkbox_enable_halves.move(200, 290)
+    checkbox_enable_halves.move(230, 290)
 
     checkbox_gleague_ft_rule = QtWidgets.QCheckBox(win)
-    checkbox_gleague_ft_rule.setChecked(False)
-    checkbox_gleague_ft_rule.move(200, 330)
+    checkbox_gleague_ft_rule.move(230, 330)
 
     txt_internal_game_date_year = QtWidgets.QLineEdit(win)
-    txt_internal_game_date_year.move(200, 370)
+    txt_internal_game_date_year.move(230, 370)
     txt_internal_game_date_year.setPlaceholderText("2013")
-    txt_internal_game_date_year.setText("2013")
 
     def disable_threes(self):
         global shorten_threes_enabled, threes_disabled
@@ -409,8 +457,7 @@ def window():
             checkbox_shorten_threes.setDisabled(False)
 
     checkbox_disable_threes = QtWidgets.QCheckBox(win)
-    checkbox_disable_threes.setChecked(False)
-    checkbox_disable_threes.move(200, 410)
+    checkbox_disable_threes.move(230, 410)
     checkbox_disable_threes.clicked.connect(disable_threes)
 
     def enable_shortened_threes(self):
@@ -425,23 +472,51 @@ def window():
             shorten_threes_enabled = False
     
     checkbox_shorten_threes = QtWidgets.QCheckBox(win)
-    checkbox_shorten_threes.setChecked(False)
-    checkbox_shorten_threes.move(200, 450)
+    checkbox_shorten_threes.move(230, 450)
     checkbox_shorten_threes.clicked.connect(enable_shortened_threes)
 
     txt_shortened_threes_length = QtWidgets.QLineEdit(win)
-    txt_shortened_threes_length.move(200, 490)
-    txt_shortened_threes_length.setDisabled(True)
-    txt_shortened_threes_length.setText(str(shortened_three_point_length / 30.48))
+    txt_shortened_threes_length.move(230, 490)
 
-    def apply_clicked(self):
+    def override_period_length(self):
+        global override_period_length_enabled
+        if checkbox_override_period_length.isChecked():
+            print("Override game length enabled.")
+            txt_override_period_length.setDisabled(False)
+            override_period_length_enabled = True
+        else:
+            print("Override game length disabled.")
+            txt_override_period_length.setDisabled(True)
+            override_period_length_enabled = False
+
+    checkbox_override_period_length = QtWidgets.QCheckBox(win)
+    checkbox_override_period_length.move(230, 530)
+    checkbox_override_period_length.clicked.connect(override_period_length)
+
+    txt_override_period_length = QtWidgets.QLineEdit(win)
+    txt_override_period_length.move(230, 570)
+
+
+    def apply_clicked(self = None):
         print("New values applied.")
+
+        #print(resource_path('dev.txt'))
+        """ with os.open("dev.cfg", "w") as f:
+            print("balls") """
+            #parser.write(f)
+        f = open('dev_test.cfg', 'w')
+        #dev.test()
+        #parser.write(f)
+        f.writelines(["hello elan", "i am cool"])
+        f.close()
+
         set_shot_clock_full(txt_shot_clock.text())
         set_shot_clock_reset(txt_reset_shot_clock.text())
         set_target_score(txt_target_score.text())
         set_overtime_deadline(txt_overtime_deadline.text())
         set_shortened_three_length(txt_shortened_threes_length.text())
-        global ten_second_violation_enabled, halves_enabled, g_league_free_throw_rule_enabled, threes_disabled
+        set_override_period_length(txt_override_period_length.text())
+        global ten_second_violation_enabled, halves_enabled, g_league_free_throw_rule_enabled, threes_disabled, override_period_length_enabled
         if checkbox_enable_ten_second.isChecked():
             print("Ten second backcourt enabled.")
             ten_second_violation_enabled = True
@@ -462,6 +537,8 @@ def window():
         else:
             print("G-League FTs: Disabled")
             g_league_free_throw_rule_enabled = False
+        if checkbox_override_period_length.isChecked():
+            override_period_length_enabled = True
         try:
             mem = Pymem("nba2k14.exe")
             module = module_from_name(mem.process_handle, "nba2k14.exe").lpBaseOfDll
@@ -472,15 +549,40 @@ def window():
             lbl_please_open_game.setText("Please open NBA 2K14 / illegal game year.")
             lbl_please_open_game.setStyleSheet('QLabel{color: red}')
             lbl_please_open_game.adjustSize()
+        
+
+    #print(parser.get('settings', 'shot_clock'))
+    txt_shot_clock.setText(parser.get('settings', 'shot_clock'))
+    txt_reset_shot_clock.setText(parser.get('settings', 'reset_shot_clock'))
+    checkbox_enable_ten_second.setChecked(parser.get('settings', 'ten_second_backcourt_enabled') == 'True')
+    checkbox_enable_target_score.setChecked(parser.get('settings', 'target_score_enabled') == 'True')
+    txt_target_score.setDisabled(parser.get('settings', 'target_score_enabled') == 'False')
+    txt_target_score.setText(parser.get('settings', 'ot_target_score'))
+    txt_overtime_deadline.setDisabled(parser.get('settings', 'target_score_enabled') == 'False')
+    txt_overtime_deadline.setText(parser.get('settings', 'ot_deadline'))
+    checkbox_enable_halves.setChecked(parser.get('settings', 'two_halves_enabled') == 'True')
+    checkbox_gleague_ft_rule.setChecked(parser.get('settings', 'g_league_ft_rule_enabled') == 'True')
+    txt_internal_game_date_year.setText(parser.get('settings', 'internal_game_year'))
+    checkbox_disable_threes.setChecked(parser.get('settings', 'disable_three_pointers_enabled') == 'True')
+    checkbox_shorten_threes.setChecked(parser.get('settings', 'shorten_three_pointers_enabled') == 'True')
+    txt_shortened_threes_length.setDisabled(parser.get('settings', 'shorten_three_pointers_enabled') == 'False')
+    txt_shortened_threes_length.setText(parser.get('settings', 'shortened_three_pointer_length'))
+    checkbox_override_period_length.setChecked(parser.get('settings', 'override_period_length_enabled') == 'True')
+    txt_override_period_length.setDisabled(parser.get('settings', 'override_period_length_enabled') == 'False')
+    txt_override_period_length.setText(parser.get('settings', 'period_length'))
+    apply_clicked()
 
     btn_apply = QtWidgets.QPushButton(win)
     btn_apply.setText("Apply")
     btn_apply.clicked.connect(apply_clicked)
-    btn_apply.move(200, 530)
+    btn_apply.move(230, 610)
+
     thread1 = QThread1()
     thread1.start()
 
     win.show()
-    sys.exit(app.exec_())
+    
+    ret = app.exec_()
+    sys.exit(ret)
 
 window()
