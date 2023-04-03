@@ -417,7 +417,7 @@ def window():
     checkbox_enable_ten_second = QtWidgets.QCheckBox(win)
     checkbox_enable_ten_second.move(230, 130)
 
-    def enable_target_score_clicked(self):
+    def enable_target_score_clicked(self = None):
         global target_score_enabled
         if checkbox_enable_target_score.isChecked():
             print("Target score on.")
@@ -454,7 +454,7 @@ def window():
     txt_internal_game_date_year.move(230, 370)
     txt_internal_game_date_year.setPlaceholderText("2013")
 
-    def disable_threes(self):
+    def disable_threes(self = None):
         global shorten_threes_enabled, threes_disabled
         if checkbox_disable_threes.isChecked():
             print("3s: Disabled")
@@ -475,7 +475,7 @@ def window():
     checkbox_disable_threes.move(230, 410)
     checkbox_disable_threes.clicked.connect(disable_threes)
 
-    def enable_shortened_threes(self):
+    def enable_shortened_threes(self = None):
         global shorten_threes_enabled
         if checkbox_shorten_threes.isChecked():
             print("Shortened threes on.")
@@ -497,7 +497,7 @@ def window():
     txt_shortened_threes_length = QtWidgets.QLineEdit(win)
     txt_shortened_threes_length.move(230, 490)
 
-    def override_period_length(self):
+    def override_period_length(self = None):
         global override_period_length_enabled
         if checkbox_override_period_length.isChecked():
             print("Override game length enabled.")
@@ -577,25 +577,31 @@ def window():
     txt_reset_shot_clock.setText(parser.get('settings', 'reset_shot_clock'))
     checkbox_enable_ten_second.setChecked(parser.get('settings', 'ten_second_backcourt_enabled') == 'True')
     checkbox_enable_target_score.setChecked(parser.get('settings', 'target_score_enabled') == 'True')
-    txt_target_score.setDisabled(parser.get('settings', 'target_score_enabled') == 'False')
+    #txt_target_score.setDisabled(parser.get('settings', 'target_score_enabled') == 'False')
     txt_target_score.setText(parser.get('settings', 'ot_target_score'))
-    txt_overtime_deadline.setDisabled(parser.get('settings', 'target_score_enabled') == 'False')
+    #txt_overtime_deadline.setDisabled(parser.get('settings', 'target_score_enabled') == 'False')
     txt_overtime_deadline.setText(parser.get('settings', 'ot_deadline'))
     checkbox_enable_halves.setChecked(parser.get('settings', 'two_halves_enabled') == 'True')
     checkbox_gleague_ft_rule.setChecked(parser.get('settings', 'g_league_ft_rule_enabled') == 'True')
     txt_internal_game_date_year.setText(parser.get('settings', 'internal_game_year'))
     checkbox_disable_threes.setChecked(parser.get('settings', 'disable_three_pointers_enabled') == 'True')
     checkbox_shorten_threes.setChecked(parser.get('settings', 'shorten_three_pointers_enabled') == 'True')
-    txt_shortened_threes_length.setDisabled(parser.get('settings', 'shorten_three_pointers_enabled') == 'False')
+    #txt_shortened_threes_length.setDisabled(parser.get('settings', 'shorten_three_pointers_enabled') == 'False')
     txt_shortened_threes_length.setText(parser.get('settings', 'shortened_three_pointer_length'))
     checkbox_override_period_length.setChecked(parser.get('settings', 'override_period_length_enabled') == 'True')
-    txt_override_period_length.setDisabled(parser.get('settings', 'override_period_length_enabled') == 'False')
+    #txt_override_period_length.setDisabled(parser.get('settings', 'override_period_length_enabled') == 'False')
     txt_override_period_length.setText(parser.get('settings', 'period_length'))
+
+    enable_target_score_clicked()
+    disable_threes()
+    enable_shortened_threes()
+    override_period_length()
+
     apply_clicked()
 
-    if checkbox_disable_threes.isChecked():
+    """ if checkbox_disable_threes.isChecked():
         checkbox_shorten_threes.setChecked(False)
-        checkbox_shorten_threes.setDisabled(True)
+        checkbox_shorten_threes.setDisabled(True) """
 
     btn_apply = QtWidgets.QPushButton(win)
     btn_apply.setText("Apply")

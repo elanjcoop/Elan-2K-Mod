@@ -4,12 +4,13 @@
 * Customize the Shot Clock
 * Reset the Shot Clock on Offensive Boards (post-2018 NBA Update)
 * No 3-Pointers Mode
+* 3-Point Line Shortened (High School, College, '94-'96 NBA)
 * 10-Second Backcourt Violation (College, High School)
 * Target Score (Default: G-League)
 * Two Halves (College)
 * G-League FT Rule
 * Change the Internal Game Year
-
+* Override Period Length
 
 ## START IT UP
 Simply open dist/Elan's Mod.exe
@@ -26,17 +27,20 @@ How to build for yourself:
 8. Run "pyinstaller main.spec"
 9. If you renamed in Step 6, delete "main.exe" and run RENAMED_FILE.exe
 
-## MORE
-Read more about the mod here:
-https://forums.nba-live.com/viewtopic.php?f=153&t=114893
-
 ## SIDE EFFECTS
 1. Winning on first free throw with target score on will have players walk around for a while.
 2. Shooting foul on shortened threes will only lead to two shots, not three.
-3. Running the mod before the game loads will likely lead to "override period length" not working.
+
+## KNOWN BUGS
+1. Offensive rebounds triggering shot clock resets are detected too often.
+2. Running the mod before the game loads will likely lead to "override period length" not working.
 
 ## AGENDA
 1. Create tutorial for tool.
 2. Create consistency with Apply button.
 3. Add four-pointers.
 4. Make qualifying shortened threes receive a 3-Pt foul shot.
+
+## MORE
+Read more about the mod here:
+https://forums.nba-live.com/viewtopic.php?f=153&t=114893
