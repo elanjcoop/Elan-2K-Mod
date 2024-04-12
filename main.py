@@ -45,6 +45,7 @@ AWAY_GAME_FOULS_ADDRESS = 0x19E29C4
 FREE_THROWS_REMAINING_ADDRESS = 0x19EE8DC
 FREE_THROWS_VALUE_ADDRESS = 0x19EE94C
 ACTIVE_SHOT_ADDRESS = 0x19EE8F8
+SHOT_GOING_IN_ADDRESS = 0x1A165C8
 ### HEAP LOCATIONS ###
 PERIOD_LENGTH_PN_LOCATION = 0x011472E4
 ### HEAP OFFSETS ###
@@ -59,6 +60,7 @@ target_target_score = 5
 target_overtime_deadline = 3600.0
 shortened_three_point_length = 601.98
 override_period_length_value = 20
+four_point_line_length = 914.4
 
 prev_home_off_reb_count, prev_away_off_reb_count = 0, 0
 
@@ -83,6 +85,8 @@ g_league_free_throw_rule_enabled = False
 threes_disabled = False
 shorten_threes_enabled = False
 override_period_length_enabled = False
+four_point_line_enabled = False
+automake_shot_enabled = False
 
 
 def get_pointer_address(mem, module, location, offsets):
@@ -180,10 +184,13 @@ def sync_rebounds(mem, module):
     prev_away_off_reb_count = mem.read_short(module + AWAY_OFF_REB_ADDRESS)
 
 def check_four_pointer(mem, module):
-    if mem.read_float(module + SHOT_LENGTH_ADDRESS) > 762.0:
+    if mem.read_float(module + SHOT_LENGTH_ADDRESS) > four_point_line_length:
         mem.write_short(module + THREE_POINTER_VALUE_ADDRESS, 4)
     else:
-        mem.write_short(module + THREE_POINTER_VALUE_ADDRESS, 3)
+        mem.write_short(module + THREE_POINTER_VALUE_ADDRESS, 3 if not threes_disabled else 2)
+
+def automake_shot(mem, module):
+    mem.write_short(module + SHOT_GOING_IN_ADDRESS, 1)
 
 def g_league_free_throw_rule(mem, module):
     global away_team_fouls, home_team_fouls, time_remaining
@@ -266,6 +273,7 @@ def start_mod():
     while True:
         try:
             global has_overtime
+            automake_shot(mem, module)
             if mem.read_short(module + HOME_OFF_REB_ADDRESS) != prev_home_off_reb_count:
                 mem.write_float(module + SHOT_CLOCK_ADDRESS, target_shot_clock_reset)
                 prev_home_off_reb_count = mem.read_short(module + HOME_OFF_REB_ADDRESS)
@@ -285,6 +293,14 @@ def start_mod():
                 if mem.read_short(module + TWO_POINTER_VALUE_ADDRESS) != 2:
                     mem.write_short(module + TWO_POINTER_VALUE_ADDRESS, 2)
                     print("Reverted 3-Pt Shortening.")
+            if four_point_line_enabled:
+                check_four_pointer(mem, module)
+            else:
+                if mem.read_short(module + THREE_POINTER_VALUE_ADDRESS) == 4:
+                    mem.write_short(module + THREE_POINTER_VALUE_ADDRESS, 3)
+                    print("Disabled 4-Pt Line.")
+            if automake_shot_enabled:
+                automake_shot(mem, module)
             if ten_second_violation_enabled:
                 if mem.read_float(module + BACKCOURT_TIME_LEFT_ADDRESS) == OFFICIAL_BACKCOURT_TIME:
                     mem.write_float(module + BACKCOURT_TIME_LEFT_ADDRESS, 10.0)
@@ -300,7 +316,6 @@ def start_mod():
                     check_target_score_reached(mem, module)
             else:
                 has_overtime = False
-            #check_four_pointer()
             if g_league_free_throw_rule_enabled:
                 g_league_free_throw_rule(mem, module)
             if threes_disabled:
@@ -317,7 +332,7 @@ def window():
     app = QApplication(sys.argv)
     win = QMainWindow()
 
-    win.setGeometry(1200, 300, 400, 700)
+    win.setGeometry(1200, 300, 400, 790)
     win.setWindowTitle("Elan's Mod")
     win.setWindowIcon(QIcon("ja.jpg"))
     def resource_path(relative_path):
@@ -405,6 +420,14 @@ def window():
     lbl_period_length.setText("Period length (minutes):")
     lbl_period_length.move(40, 570)
     lbl_period_length.setFixedWidth(140)
+
+    lbl_four_pt_line = QtWidgets.QLabel(win)
+    lbl_four_pt_line.setText("4-Point line:")
+    lbl_four_pt_line.move(40,610)
+
+    lbl_automake_shots = QtWidgets.QLabel(win)
+    lbl_automake_shots.setText("Autobucket mode:")
+    lbl_automake_shots.move(40,650)
 
     txt_shot_clock = QtWidgets.QLineEdit(win)
     txt_shot_clock.move(230, 50)
@@ -519,6 +542,37 @@ def window():
     txt_override_period_length = QtWidgets.QLineEdit(win)
     txt_override_period_length.move(230, 570)
 
+    def enable_fours(self = None):
+        global four_point_line_enabled
+        if checkbox_enable_fours.isChecked():
+            print("Fours enabled.")
+            four_point_line_enabled = True
+            parser.set('settings', 'four_point_line_enabled', 'True')
+        else:
+            print("Fours disabled.")
+            four_point_line_enabled = False
+            parser.set('settings', 'four_point_line_enabled', 'False')
+
+
+    checkbox_enable_fours = QtWidgets.QCheckBox(win)
+    checkbox_enable_fours.move(230, 610)
+    checkbox_enable_fours.clicked.connect(enable_fours)
+
+    def automake_shots(self = None):
+        global automake_shot_enabled
+        if checkbox_automake_shots.isChecked():
+            print("Automake shots enabled.")
+            automake_shot_enabled = True
+            parser.set('settings', 'automake_shot', 'True')
+        else:
+            print("Automake shots disabled.")
+            automake_shot_enabled = False
+            parser.set('settings', 'automake_shot', 'False')
+
+    checkbox_automake_shots = QtWidgets.QCheckBox(win)
+    checkbox_automake_shots.move(230, 650)
+    checkbox_automake_shots.clicked.connect(automake_shots)
+
 
     def apply_clicked(self = None):
         print("New values applied.")
@@ -528,7 +582,7 @@ def window():
         set_overtime_deadline(txt_overtime_deadline.text())
         set_shortened_three_length(txt_shortened_threes_length.text())
         set_override_period_length(txt_override_period_length.text())
-        global ten_second_violation_enabled, halves_enabled, g_league_free_throw_rule_enabled, threes_disabled, override_period_length_enabled
+        global ten_second_violation_enabled, halves_enabled, g_league_free_throw_rule_enabled, threes_disabled, override_period_length_enabled, four_point_line_enabled, automake_shot_enabled
         if checkbox_enable_ten_second.isChecked():
             print("Ten second backcourt enabled.")
             ten_second_violation_enabled = True
@@ -553,6 +607,7 @@ def window():
             print("G-League FTs: Disabled")
             g_league_free_throw_rule_enabled = False
             parser.set('settings', 'g_league_ft_rule_enabled', 'False')
+        
         try:
             mem = Pymem("nba2k14.exe")
             module = process.module_from_name(mem.process_handle, "nba2k14.exe").lpBaseOfDll
@@ -591,11 +646,15 @@ def window():
     checkbox_override_period_length.setChecked(parser.get('settings', 'override_period_length_enabled') == 'True')
     #txt_override_period_length.setDisabled(parser.get('settings', 'override_period_length_enabled') == 'False')
     txt_override_period_length.setText(parser.get('settings', 'period_length'))
+    checkbox_enable_fours.setChecked(parser.get('settings', 'four_point_line_enabled') == 'True')
+    checkbox_automake_shots.setChecked(parser.get('settings', 'automake_shot') == 'True')
 
     enable_target_score_clicked()
     disable_threes()
     enable_shortened_threes()
     override_period_length()
+    enable_fours()
+    automake_shots()
 
     apply_clicked()
 
@@ -606,7 +665,7 @@ def window():
     btn_apply = QtWidgets.QPushButton(win)
     btn_apply.setText("Apply")
     btn_apply.clicked.connect(apply_clicked)
-    btn_apply.move(230, 610)
+    btn_apply.move(230, 690)
 
     thread1 = QThread1()
     thread1.start()

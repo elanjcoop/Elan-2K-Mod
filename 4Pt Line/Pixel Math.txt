@@ -1,0 +1,15 @@
+846 pixels width  = 23ft 9in = 285in
+2.968 p per inch
+6ft 3 inches = 75in
+222.6 pixels = 75inches, the difference between apex of the two lines
+
+2854 pixels = width of court
+1427 = half of court
+
+319 = distance line to center
+256 = width of 4pt layer
+319 + 256 = 575 pixels, transform
+
+319 * 2 + 256 * 2 = 1150 pixels across x axis
+
+30ft = 360in = 914.4cm

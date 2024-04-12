@@ -24,7 +24,16 @@ print("start.")
     #mem.write_float(module + 0x1A16298, 0.95)
 """
 count = 0
+
+def possession_based_scoring():
+    print("running...")
+    if mem.read_bool(module + 0x10F5655):
+        mem.write_bool(module + 0x1A165C8, False)
+    else:
+        mem.write_bool(module + 0x1A165C8, True)
+
 while True:
+    possession_based_scoring()
     #print(mem.read_bool(module + 0x10F5655))
     #print(mem.read_bool(module + 0x1A165C8))
     #print(mem.read_bool(module + 0x1A165C8))
@@ -44,14 +53,11 @@ while True:
     elif mem.read_short(module + 0x19C61DC) != 3:
         count = 0 """
     
-    if mem.read_bool(module + 0x10F5655):
-        mem.write_bool(module + 0x1A165C8, True)
-        mem.write_int(module + 0x1A1629C, 5000) ### SHOT ARC!!!! ~ min: 650
-    else:
-        #print("miss")
-        mem.write_bool(module + 0x1A165C8, False)
-        mem.write_int(module + 0x1A1629C, 1000)
-
+    """ # pretending we're looking at logo of court
+    # 0x1A16280 - y-coord, 0 = middle of court, < 0 = south of logo, > 0 north of logo 
+    # 0x1A16288 - x-coord, 0 = halfcourt line, < 0 = left side of court, > 0 = right side of court
+    #mem.write_float(module + 0x1A16280, 257.92)
+    #mem.write_float(module + 0x1A16288, 881.71) """
 """ while True:
     if mem.read_short(module + 0x19C61DC) == 3:
         mem.write_bool(module + 0x1A165C8, True) """

@@ -34,12 +34,12 @@ How to build for yourself:
 ## KNOWN BUGS
 1. Offensive rebounds triggering shot clock resets are detected too often.
 2. Running the mod before the game loads will likely lead to "override period length" not working.
+3. Automake shots selectively works
 
 ## AGENDA
 1. Create tutorial for tool.
 2. Create consistency with Apply button.
-3. Add four-pointers.
-4. Make qualifying shortened threes receive a 3-Pt foul shot.
+3. Make qualifying shortened threes receive a 3-Pt foul shot.
 
 ## MORE
 Read more about the mod here:
