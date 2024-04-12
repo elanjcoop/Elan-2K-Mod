@@ -11,6 +11,8 @@
 * G-League FT Rule
 * Change the Internal Game Year
 * Override Period Length
+* Four pointers
+* Automake shots
 
 ## START IT UP
 Simply open dist/Elan's Mod.exe
