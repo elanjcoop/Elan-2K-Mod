@@ -12,6 +12,7 @@
 * Change the Internal Game Year
 * Override Period Length
 * Four pointers
+* Five pointers
 * Automake shots
 
 ## START IT UP

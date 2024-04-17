@@ -8,7 +8,10 @@ mem = Pymem("nba2k14.exe")
 module = process.module_from_name(mem.process_handle, "nba2k14.exe").lpBaseOfDll
 going_in = 0
 active_shot = False
-print("start.")
+
+while True:
+    mem.write_float(module + 0x1A1A29C, 5.0)
+# print("start.")
 """ while True:
     if mem.read_short(module + 0x19EE8F8) == 1 and active_shot == False:
         active_shot = True
@@ -23,17 +26,18 @@ print("start.")
     mem.write_short(module + 0x1A165C8, going_in)
     #mem.write_float(module + 0x1A16298, 0.95)
 """
-count = 0
+# count = 0
 
-def possession_based_scoring():
-    print("running...")
-    if mem.read_bool(module + 0x10F5655):
-        mem.write_bool(module + 0x1A165C8, False)
-    else:
-        mem.write_bool(module + 0x1A165C8, True)
+# def possession_based_scoring():
+#     print("running...")
+#     if mem.read_bool(module + 0x10F5655):
+#         mem.write_bool(module + 0x1A165C8, False)
+#     else:
+#         mem.write_bool(module + 0x1A165C8, True)
 
-while True:
-    possession_based_scoring()
+# while True:
+#     mem.write_float(module + 0x19ACD88, 2)
+    #possession_based_scoring()
     #print(mem.read_bool(module + 0x10F5655))
     #print(mem.read_bool(module + 0x1A165C8))
     #print(mem.read_bool(module + 0x1A165C8))
@@ -44,16 +48,16 @@ while True:
     #mem.write_bool(module + 0x1A165C8, True)
     #if mem.read_short(module + 0x19C61DC) == 3:
     #mem.write_int(module + 0x1A1629C, 645) ### SHOT ARC!!!! ~ min: 650
-    """ if mem.read_short(module + 0x19C61DC) == 3 and count < 25:
-        mem.write_bool(module + 0x1A165C8, True)
-        mem.write_bool(module + 0x1A09A14, True)
-        mem.write_bool(module + 0x1A09924, True)
-        count += 1
-        print("overwrite...", count)
-    elif mem.read_short(module + 0x19C61DC) != 3:
-        count = 0 """
+    # if mem.read_short(module + 0x19C61DC) == 3 and count < 25:
+    #     mem.write_bool(module + 0x1A165C8, True)
+    #     mem.write_bool(module + 0x1A09A14, True)
+    #     mem.write_bool(module + 0x1A09924, True)
+    #     count += 1
+    #     print("overwrite...", count)
+    # elif mem.read_short(module + 0x19C61DC) != 3:
+    #     count = 0
     
-    """ # pretending we're looking at logo of court
+    # pretending we're looking at logo of court
     # 0x1A16280 - y-coord, 0 = middle of court, < 0 = south of logo, > 0 north of logo 
     # 0x1A16288 - x-coord, 0 = halfcourt line, < 0 = left side of court, > 0 = right side of court
     #mem.write_float(module + 0x1A16280, 257.92)

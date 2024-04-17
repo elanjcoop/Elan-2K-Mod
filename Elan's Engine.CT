@@ -259,6 +259,13 @@
           <VariableType>Float</VariableType>
           <Address>nba2k14.exe+19EE914</Address>
         </CheatEntry>
+        <CheatEntry>
+          <ID>60</ID>
+          <Description>"Shot Beyond Half-Court? (0 no, 63/64 yes)"</Description>
+          <ShowAsSigned>0</ShowAsSigned>
+          <VariableType>Byte</VariableType>
+          <Address>nba2k14.exe+1A16407</Address>
+        </CheatEntry>
       </CheatEntries>
     </CheatEntry>
     <CheatEntry>

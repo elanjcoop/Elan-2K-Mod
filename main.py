@@ -46,6 +46,7 @@ FREE_THROWS_REMAINING_ADDRESS = 0x19EE8DC
 FREE_THROWS_VALUE_ADDRESS = 0x19EE94C
 ACTIVE_SHOT_ADDRESS = 0x19EE8F8
 SHOT_GOING_IN_ADDRESS = 0x1A165C8
+BEYOND_HALF_COURT_ADDRESS = 0x1A16407
 ### HEAP LOCATIONS ###
 PERIOD_LENGTH_PN_LOCATION = 0x011472E4
 ### HEAP OFFSETS ###
@@ -87,6 +88,7 @@ shorten_threes_enabled = False
 override_period_length_enabled = False
 four_point_line_enabled = False
 automake_shot_enabled = False
+five_point_line_enabled = False
 
 
 def get_pointer_address(mem, module, location, offsets):
@@ -182,12 +184,29 @@ def sync_rebounds(mem, module):
     global prev_home_off_reb_count, prev_away_off_reb_count
     prev_home_off_reb_count = mem.read_short(module + HOME_OFF_REB_ADDRESS)
     prev_away_off_reb_count = mem.read_short(module + AWAY_OFF_REB_ADDRESS)
+    mem.read_
 
 def check_four_pointer(mem, module):
+    global five_point_line_enabled
     if mem.read_float(module + SHOT_LENGTH_ADDRESS) > four_point_line_length:
-        mem.write_short(module + THREE_POINTER_VALUE_ADDRESS, 4)
-    else:
-        mem.write_short(module + THREE_POINTER_VALUE_ADDRESS, 3 if not threes_disabled else 2)
+        if five_point_line_enabled:
+            if mem.read_uchar(module + BEYOND_HALF_COURT_ADDRESS) > 0:
+                mem.write_short(module + THREE_POINTER_VALUE_ADDRESS, 5)
+            else:
+                mem.write_short(module + THREE_POINTER_VALUE_ADDRESS, 4)
+        else:
+            mem.write_short(module + THREE_POINTER_VALUE_ADDRESS, 4)
+    elif mem.read_short(module + THREE_POINTER_VALUE_ADDRESS) == 4:
+        mem.write_short(module + THREE_POINTER_VALUE_ADDRESS, 3)
+
+def check_five_pointer(mem, module):
+    global shot_length, previous_shot_length, start_time, four_point_line_enabled
+    shot_length = mem.read_float(module + SHOT_LENGTH_ADDRESS)
+    if mem.read_uchar(module + BEYOND_HALF_COURT_ADDRESS) > 0:
+        mem.write_short(module + THREE_POINTER_VALUE_ADDRESS, 5)
+    elif mem.read_short(module + THREE_POINTER_VALUE_ADDRESS) == 5:
+        if not four_point_line_enabled:
+            mem.write_short(module + THREE_POINTER_VALUE_ADDRESS, 3)
 
 def automake_shot(mem, module):
     mem.write_short(module + SHOT_GOING_IN_ADDRESS, 1)
@@ -273,7 +292,6 @@ def start_mod():
     while True:
         try:
             global has_overtime
-            automake_shot(mem, module)
             if mem.read_short(module + HOME_OFF_REB_ADDRESS) != prev_home_off_reb_count:
                 mem.write_float(module + SHOT_CLOCK_ADDRESS, target_shot_clock_reset)
                 prev_home_off_reb_count = mem.read_short(module + HOME_OFF_REB_ADDRESS)
@@ -299,6 +317,12 @@ def start_mod():
                 if mem.read_short(module + THREE_POINTER_VALUE_ADDRESS) == 4:
                     mem.write_short(module + THREE_POINTER_VALUE_ADDRESS, 3)
                     print("Disabled 4-Pt Line.")
+            if five_point_line_enabled:
+                check_five_pointer(mem, module)
+            else:
+                if mem.read_short(module + THREE_POINTER_VALUE_ADDRESS) == 5:
+                    mem.write_short(module + THREE_POINTER_VALUE_ADDRESS, 3)
+                    print("Disabled 5-Pt Line.")
             if automake_shot_enabled:
                 automake_shot(mem, module)
             if ten_second_violation_enabled:
@@ -425,9 +449,13 @@ def window():
     lbl_four_pt_line.setText("4-Point line:")
     lbl_four_pt_line.move(40,610)
 
+    lbl_five_point_line = QtWidgets.QLabel(win)
+    lbl_five_point_line.setText("5-Point line:")
+    lbl_five_point_line.move(40,650)
+
     lbl_automake_shots = QtWidgets.QLabel(win)
     lbl_automake_shots.setText("Autobucket mode:")
-    lbl_automake_shots.move(40,650)
+    lbl_automake_shots.move(40,690)
 
     txt_shot_clock = QtWidgets.QLineEdit(win)
     txt_shot_clock.move(230, 50)
@@ -558,6 +586,22 @@ def window():
     checkbox_enable_fours.move(230, 610)
     checkbox_enable_fours.clicked.connect(enable_fours)
 
+    def enable_fives(self = None):
+        global five_point_line_enabled
+        if checkbox_enable_fives.isChecked():
+            print("Fives enabled.")
+            five_point_line_enabled = True
+            parser.set('settings', 'five_point_line_enabled', 'True')
+        else:
+            print("Fives disabled.")
+            five_point_line_enabled = False
+            parser.set('settings', 'five_point_line_enabled', 'False')
+
+
+    checkbox_enable_fives = QtWidgets.QCheckBox(win)
+    checkbox_enable_fives.move(230, 650)
+    checkbox_enable_fives.clicked.connect(enable_fives)
+
     def automake_shots(self = None):
         global automake_shot_enabled
         if checkbox_automake_shots.isChecked():
@@ -570,7 +614,7 @@ def window():
             parser.set('settings', 'automake_shot', 'False')
 
     checkbox_automake_shots = QtWidgets.QCheckBox(win)
-    checkbox_automake_shots.move(230, 650)
+    checkbox_automake_shots.move(230, 690)
     checkbox_automake_shots.clicked.connect(automake_shots)
 
 
@@ -582,7 +626,7 @@ def window():
         set_overtime_deadline(txt_overtime_deadline.text())
         set_shortened_three_length(txt_shortened_threes_length.text())
         set_override_period_length(txt_override_period_length.text())
-        global ten_second_violation_enabled, halves_enabled, g_league_free_throw_rule_enabled, threes_disabled, override_period_length_enabled, four_point_line_enabled, automake_shot_enabled
+        global ten_second_violation_enabled, halves_enabled, g_league_free_throw_rule_enabled, threes_disabled, override_period_length_enabled, four_point_line_enabled, automake_shot_enabled, five_point_line_enabled
         if checkbox_enable_ten_second.isChecked():
             print("Ten second backcourt enabled.")
             ten_second_violation_enabled = True
@@ -648,6 +692,7 @@ def window():
     txt_override_period_length.setText(parser.get('settings', 'period_length'))
     checkbox_enable_fours.setChecked(parser.get('settings', 'four_point_line_enabled') == 'True')
     checkbox_automake_shots.setChecked(parser.get('settings', 'automake_shot') == 'True')
+    checkbox_enable_fives.setChecked(parser.get('settings', 'five_point_line_enabled') == 'True')
 
     enable_target_score_clicked()
     disable_threes()
@@ -655,6 +700,7 @@ def window():
     override_period_length()
     enable_fours()
     automake_shots()
+    enable_fives()
 
     apply_clicked()
 
@@ -665,7 +711,7 @@ def window():
     btn_apply = QtWidgets.QPushButton(win)
     btn_apply.setText("Apply")
     btn_apply.clicked.connect(apply_clicked)
-    btn_apply.move(230, 690)
+    btn_apply.move(230, 730)
 
     thread1 = QThread1()
     thread1.start()
