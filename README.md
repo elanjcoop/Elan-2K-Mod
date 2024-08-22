@@ -25,10 +25,23 @@ How to build for yourself:
 3. Run "pyinstaller --onefile main.py"
 4. Wait for that command to finish running, then in main.spec, set datas=[('resources', 'resources')]
 5. Under the EXE grouping, Set "Console" to "False"
-6. Set "Name" to whatever you please
-7. Add "icon='ja.ico'" as your final line in the exe group of arguments, or whatever icon you please
-8. Run "pyinstaller main.spec"
-9. If you renamed in Step 6, delete "main.exe" and run RENAMED_FILE.exe
+6. Set "Name" to whatever you please. Add "icon='ja.ico'" as your final line in the exe group of arguments, or whatever icon you please.
+6a. Match the name and icon for the following lines in `main.py`:
+win.setWindowTitle("Elan's Mod")
+win.setWindowIcon(QIcon("ja.jpg"))
+win.setWindowIcon(QIcon(resource_path('resources/images/ja.jpg')))
+7. Run "pyinstaller main.spec"
+8. If you renamed in Step 6, delete "main.exe" and run RENAMED_FILE.exe
+9. Your file structure should look as follows:
+├── dist
+│   ├── YOUR_APPNAME.exe
+├── resources
+│   ├── files
+│   │   ├── dev.cfg
+│   ├── images
+│   │   ├── YOUR_IMAGE.jpg
+10. Feel free to create a shortcut of your main .exe to Desktop / wherever for quick access.
+
 
 ## SIDE EFFECTS
 1. Winning on first free throw with target score on will have players walk around for a while.

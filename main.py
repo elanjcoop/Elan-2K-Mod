@@ -61,7 +61,7 @@ target_target_score = 5
 target_overtime_deadline = 3600.0
 shortened_three_point_length = 601.98
 override_period_length_value = 20
-four_point_line_length = 914.4
+four_point_line_length = 822.96
 
 prev_home_off_reb_count, prev_away_off_reb_count = 0, 0
 
@@ -154,6 +154,18 @@ def set_shortened_three_length(input_shortened_three_length):
     else:
         shortened_three_point_length = 723.9
     print("Shortened three length: ", shortened_three_point_length, sep = '')
+
+def set_four_point_line_length(input_four_length):
+    try:
+        input_four_length = float(input_four_length)
+    except:
+        input_four_length = 27
+    global four_point_line_length
+    if input_four_length > 0.0 and input_four_length < 99.0:
+        four_point_line_length = input_four_length * 30.48
+    else:
+        four_point_line_length = 822.96
+    print("4-Point length: ", four_point_line_length, sep = '')
 
 def set_override_period_length(input_period_length):
     try:
@@ -356,7 +368,7 @@ def window():
     app = QApplication(sys.argv)
     win = QMainWindow()
 
-    win.setGeometry(1200, 300, 400, 790)
+    win.setGeometry(1000, 300, 425, 840)
     win.setWindowTitle("Elan's Mod")
     win.setWindowIcon(QIcon("ja.jpg"))
     def resource_path(relative_path):
@@ -380,93 +392,114 @@ def window():
     parser.read(config_path('resources/files/dev.cfg'))
     #parser.read('resources/files/dev.cfg')
 
+    labelXPos = 40
+    fieldXPos = 280
+
     lbl_please_open_game = QtWidgets.QLabel(win)
     lbl_please_open_game.setText("")
-    lbl_please_open_game.move(40, 25)
+    lbl_please_open_game.move(labelXPos, 25)
     lbl_please_open_game.setLineWidth(100)
 
     lbl_shot_clock = QtWidgets.QLabel(win)
     lbl_shot_clock.setText("Shot Clock: ")
-    lbl_shot_clock.move(40, 50)
-    #lbl_shot_clock.setToolTip("Bonjour")
+    lbl_shot_clock.move(labelXPos, 50)
+    lbl_shot_clock.adjustSize()
 
     lbl_reset_shot_clock = QtWidgets.QLabel(win)
     lbl_reset_shot_clock.setText("Reset Shot Clock:")
-    lbl_reset_shot_clock.move(40, 90)
+    lbl_reset_shot_clock.move(labelXPos, 90)
+    lbl_reset_shot_clock.adjustSize()
 
     lbl_ten_second_violation = QtWidgets.QLabel(win)
     lbl_ten_second_violation.setText("10 Second Backcourt Violation")
-    lbl_ten_second_violation.move(40,130)
+    lbl_ten_second_violation.move(labelXPos,130)
+    lbl_ten_second_violation.adjustSize()
     
     lbl_enable_target_score = QtWidgets.QLabel(win)
     lbl_enable_target_score.setText("Target Score")
-    lbl_enable_target_score.move(40,170)
+    lbl_enable_target_score.move(labelXPos,170)
+    lbl_enable_target_score.adjustSize()
 
     lbl_target_score = QtWidgets.QLabel(win)
     lbl_target_score.setText("OT Target Score:")
-    lbl_target_score.move(40, 210)
+    lbl_target_score.move(labelXPos, 210)
+    lbl_target_score.adjustSize()
 
     lbl_overtime_deadline = QtWidgets.QLabel(win)
     lbl_overtime_deadline.setText("OT Deadline (minutes):")
+    lbl_overtime_deadline.move(labelXPos, 250)
     lbl_overtime_deadline.adjustSize()
-    lbl_overtime_deadline.move(40, 250)
     
     lbl_enable_halves = QtWidgets.QLabel(win)
     lbl_enable_halves.setText("Two Halves")
-    lbl_enable_halves.move(40, 290)
+    lbl_enable_halves.move(labelXPos, 290)
+    lbl_enable_halves.adjustSize()
 
     lbl_gleague_ft_rule = QtWidgets.QLabel(win)
     lbl_gleague_ft_rule.setText("G-League FT Rule")
-    lbl_gleague_ft_rule.move(40, 330)
+    lbl_gleague_ft_rule.move(labelXPos, 330)
+    lbl_gleague_ft_rule.adjustSize()
 
     lbl_internal_game_year = QtWidgets.QLabel(win)
     lbl_internal_game_year.setText("Internal Game Year")
-    lbl_internal_game_year.move(40, 370)
+    lbl_internal_game_year.move(labelXPos, 370)
+    lbl_internal_game_year.adjustSize()
 
     lbl_disable_threes = QtWidgets.QLabel(win)
     lbl_disable_threes.setText("Disable 3-Pointers?")
-    lbl_disable_threes.move(40, 410)
+    lbl_disable_threes.move(labelXPos, 410)
+    lbl_disable_threes.adjustSize()
 
     lbl_enable_shortened_threes = QtWidgets.QLabel(win)
     lbl_enable_shortened_threes.setText("Shorten 3-Pointers?")
-    lbl_enable_shortened_threes.move(40, 450)
+    lbl_enable_shortened_threes.move(labelXPos, 450)
+    lbl_enable_shortened_threes.adjustSize()
 
     lbl_shortened_threes = QtWidgets.QLabel(win)
     lbl_shortened_threes.setText("3-Point length (ft):")
-    lbl_shortened_threes.move(40, 490)
+    lbl_shortened_threes.move(labelXPos, 490)
+    lbl_shortened_threes.adjustSize()
 
     lbl_override_period_length = QtWidgets.QLabel(win)
     lbl_override_period_length.setText("Override period length?")
-    lbl_override_period_length.move(40, 530)
-    lbl_override_period_length.setFixedWidth(140)
+    lbl_override_period_length.move(labelXPos, 530)
+    lbl_override_period_length.adjustSize()
 
     lbl_period_length = QtWidgets.QLabel(win)
     lbl_period_length.setText("Period length (minutes):")
-    lbl_period_length.move(40, 570)
-    lbl_period_length.setFixedWidth(140)
+    lbl_period_length.move(labelXPos, 570)
+    lbl_period_length.adjustSize()
 
     lbl_four_pt_line = QtWidgets.QLabel(win)
     lbl_four_pt_line.setText("4-Point line:")
-    lbl_four_pt_line.move(40,610)
+    lbl_four_pt_line.move(labelXPos,610)
+    lbl_four_pt_line.adjustSize()
+
+    lbl_four_pt_length = QtWidgets.QLabel(win)
+    lbl_four_pt_length.setText("4-Point length (ft):")
+    lbl_four_pt_length.move(labelXPos,650)
+    lbl_four_pt_length.adjustSize()
 
     lbl_five_point_line = QtWidgets.QLabel(win)
     lbl_five_point_line.setText("5-Point line:")
-    lbl_five_point_line.move(40,650)
+    lbl_five_point_line.move(labelXPos,690)
+    lbl_five_point_line.adjustSize()
 
     lbl_automake_shots = QtWidgets.QLabel(win)
     lbl_automake_shots.setText("Autobucket mode:")
-    lbl_automake_shots.move(40,690)
+    lbl_automake_shots.move(labelXPos,730)
+    lbl_automake_shots.adjustSize()
 
     txt_shot_clock = QtWidgets.QLineEdit(win)
-    txt_shot_clock.move(230, 50)
+    txt_shot_clock.move(fieldXPos, 50)
     txt_shot_clock.setPlaceholderText("24")
 
     txt_reset_shot_clock = QtWidgets.QLineEdit(win)
-    txt_reset_shot_clock.move(230, 90)
+    txt_reset_shot_clock.move(fieldXPos, 90)
     txt_reset_shot_clock.setPlaceholderText("14")
 
     checkbox_enable_ten_second = QtWidgets.QCheckBox(win)
-    checkbox_enable_ten_second.move(230, 130)
+    checkbox_enable_ten_second.move(fieldXPos, 130)
 
     def enable_target_score_clicked(self = None):
         global target_score_enabled
@@ -486,23 +519,23 @@ def window():
             parser.write(f)
 
     checkbox_enable_target_score = QtWidgets.QCheckBox(win)
-    checkbox_enable_target_score.move(230, 170)
+    checkbox_enable_target_score.move(fieldXPos, 170)
     checkbox_enable_target_score.clicked.connect(enable_target_score_clicked)
 
     txt_target_score = QtWidgets.QLineEdit(win)
-    txt_target_score.move(230, 210)
+    txt_target_score.move(fieldXPos, 210)
     
     txt_overtime_deadline = QtWidgets.QLineEdit(win)
-    txt_overtime_deadline.move(230, 250)
+    txt_overtime_deadline.move(fieldXPos, 250)
 
     checkbox_enable_halves = QtWidgets.QCheckBox(win)
-    checkbox_enable_halves.move(230, 290)
+    checkbox_enable_halves.move(fieldXPos, 290)
 
     checkbox_gleague_ft_rule = QtWidgets.QCheckBox(win)
-    checkbox_gleague_ft_rule.move(230, 330)
+    checkbox_gleague_ft_rule.move(fieldXPos, 330)
 
     txt_internal_game_date_year = QtWidgets.QLineEdit(win)
-    txt_internal_game_date_year.move(230, 370)
+    txt_internal_game_date_year.move(fieldXPos, 370)
     txt_internal_game_date_year.setPlaceholderText("2013")
 
     def disable_threes(self = None):
@@ -523,7 +556,7 @@ def window():
             parser.write(f)
 
     checkbox_disable_threes = QtWidgets.QCheckBox(win)
-    checkbox_disable_threes.move(230, 410)
+    checkbox_disable_threes.move(fieldXPos, 410)
     checkbox_disable_threes.clicked.connect(disable_threes)
 
     def enable_shortened_threes(self = None):
@@ -542,11 +575,11 @@ def window():
             parser.write(f)
     
     checkbox_shorten_threes = QtWidgets.QCheckBox(win)
-    checkbox_shorten_threes.move(230, 450)
+    checkbox_shorten_threes.move(fieldXPos, 450)
     checkbox_shorten_threes.clicked.connect(enable_shortened_threes)
 
     txt_shortened_threes_length = QtWidgets.QLineEdit(win)
-    txt_shortened_threes_length.move(230, 490)
+    txt_shortened_threes_length.move(fieldXPos, 490)
 
     def override_period_length(self = None):
         global override_period_length_enabled
@@ -564,27 +597,33 @@ def window():
             parser.write(f)
 
     checkbox_override_period_length = QtWidgets.QCheckBox(win)
-    checkbox_override_period_length.move(230, 530)
+    checkbox_override_period_length.move(fieldXPos, 530)
     checkbox_override_period_length.clicked.connect(override_period_length)
 
     txt_override_period_length = QtWidgets.QLineEdit(win)
-    txt_override_period_length.move(230, 570)
+    txt_override_period_length.move(fieldXPos, 570)
 
     def enable_fours(self = None):
         global four_point_line_enabled
         if checkbox_enable_fours.isChecked():
             print("Fours enabled.")
+            txt_four_point_length.setDisabled(False)
             four_point_line_enabled = True
             parser.set('settings', 'four_point_line_enabled', 'True')
         else:
             print("Fours disabled.")
+            txt_four_point_length.setDisabled(True)
             four_point_line_enabled = False
             parser.set('settings', 'four_point_line_enabled', 'False')
 
 
     checkbox_enable_fours = QtWidgets.QCheckBox(win)
-    checkbox_enable_fours.move(230, 610)
+    checkbox_enable_fours.move(fieldXPos, 610)
     checkbox_enable_fours.clicked.connect(enable_fours)
+
+    txt_four_point_length = QtWidgets.QLineEdit(win)
+    txt_four_point_length.move(fieldXPos, 650)
+
 
     def enable_fives(self = None):
         global five_point_line_enabled
@@ -599,7 +638,7 @@ def window():
 
 
     checkbox_enable_fives = QtWidgets.QCheckBox(win)
-    checkbox_enable_fives.move(230, 650)
+    checkbox_enable_fives.move(fieldXPos, 690)
     checkbox_enable_fives.clicked.connect(enable_fives)
 
     def automake_shots(self = None):
@@ -614,7 +653,7 @@ def window():
             parser.set('settings', 'automake_shot', 'False')
 
     checkbox_automake_shots = QtWidgets.QCheckBox(win)
-    checkbox_automake_shots.move(230, 690)
+    checkbox_automake_shots.move(fieldXPos, 730)
     checkbox_automake_shots.clicked.connect(automake_shots)
 
 
@@ -625,6 +664,7 @@ def window():
         set_target_score(txt_target_score.text())
         set_overtime_deadline(txt_overtime_deadline.text())
         set_shortened_three_length(txt_shortened_threes_length.text())
+        set_four_point_line_length(txt_four_point_length.text())
         set_override_period_length(txt_override_period_length.text())
         global ten_second_violation_enabled, halves_enabled, g_league_free_throw_rule_enabled, threes_disabled, override_period_length_enabled, four_point_line_enabled, automake_shot_enabled, five_point_line_enabled
         if checkbox_enable_ten_second.isChecked():
@@ -668,6 +708,7 @@ def window():
         parser.set('settings', 'ot_target_score', txt_target_score.text())
         parser.set('settings', 'ot_deadline', txt_overtime_deadline.text())
         parser.set('settings', 'shortened_three_pointer_length', txt_shortened_threes_length.text())
+        parser.set('settings', 'four_pointer_length', txt_four_point_length.text())
         parser.set('settings', 'period_length', txt_override_period_length.text())
         with open(config_path('resources/files/dev.cfg'), "w") as f:
             parser.write(f)
@@ -687,6 +728,7 @@ def window():
     checkbox_shorten_threes.setChecked(parser.get('settings', 'shorten_three_pointers_enabled') == 'True')
     #txt_shortened_threes_length.setDisabled(parser.get('settings', 'shorten_three_pointers_enabled') == 'False')
     txt_shortened_threes_length.setText(parser.get('settings', 'shortened_three_pointer_length'))
+    txt_four_point_length.setText(parser.get('settings', 'four_pointer_length'))
     checkbox_override_period_length.setChecked(parser.get('settings', 'override_period_length_enabled') == 'True')
     #txt_override_period_length.setDisabled(parser.get('settings', 'override_period_length_enabled') == 'False')
     txt_override_period_length.setText(parser.get('settings', 'period_length'))
@@ -711,7 +753,7 @@ def window():
     btn_apply = QtWidgets.QPushButton(win)
     btn_apply.setText("Apply")
     btn_apply.clicked.connect(apply_clicked)
-    btn_apply.move(230, 730)
+    btn_apply.move(fieldXPos, 770)
 
     thread1 = QThread1()
     thread1.start()
