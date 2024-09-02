@@ -33,13 +33,13 @@ win.setWindowIcon(QIcon(resource_path('resources/images/ja.jpg')))
 7. Run "pyinstaller main.spec"
 8. If you renamed in Step 6, delete "main.exe" and run RENAMED_FILE.exe
 9. Your file structure should look as follows:
-├── dist
-│   ├── YOUR_APPNAME.exe
-├── resources
-│   ├── files
-│   │   ├── dev.cfg
-│   ├── images
-│   │   ├── YOUR_IMAGE.jpg
+├── dist\
+│   ├── YOUR_APPNAME.exe\
+├── resources\
+│   ├── files\
+│   │   ├── dev.cfg\
+│   ├── images\
+│   │   ├── YOUR_IMAGE.jpg\
 10. Feel free to create a shortcut of your main .exe to Desktop / wherever for quick access.
 
 
