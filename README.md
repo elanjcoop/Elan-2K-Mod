@@ -39,7 +39,7 @@ win.setWindowIcon(QIcon(resource_path('resources/images/ja.jpg')))
 │   ├── files\
 │   │   ├── dev.cfg\
 │   ├── images\
-│   │   ├── YOUR_IMAGE.jpg\
+│   │   ├── YOUR_IMAGE.jpg
 10. Feel free to create a shortcut of your main .exe to Desktop / wherever for quick access.
 
 
